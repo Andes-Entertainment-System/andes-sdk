@@ -1,0 +1,13 @@
+[package]
+name = "andk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+clap = "4.5.23"
+md5 = "0.7.0"
+png = "0.17.15"
+serde = { version = "1.0.216", features = ["derive"] }
+serde_yml = "0.0.12"
+thiserror = "2.0.9"
