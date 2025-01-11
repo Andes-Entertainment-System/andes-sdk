@@ -10,8 +10,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     let output = process::Command::new("cmake")
         .current_dir(project_path)
         .arg(".")
-        .output()
-        .expect("Fucked!");
+        .output()?;
 
     println!("{}", String::from_utf8_lossy(&output.stdout));
     println!("{}", String::from_utf8_lossy(&output.stderr));
@@ -22,8 +21,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
 
     let output = process::Command::new("make")
         .current_dir(project_path)
-        .output()
-        .expect("Fucked!");
+        .output()?;
 
     println!("{}", String::from_utf8_lossy(&output.stdout));
     println!("{}", String::from_utf8_lossy(&output.stderr));
@@ -50,8 +48,12 @@ fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(Command::new("build").about("fuck").arg(arg!([DIRECTORY])))
-        .subcommand(Command::new("new").about("shit"));
+        .subcommand(
+            Command::new("build")
+                .about("placeholder")
+                .arg(arg!([DIRECTORY])),
+        )
+        .subcommand(Command::new("new").about("placeholder"));
     let matches = command.get_matches();
 
     match matches.subcommand() {
