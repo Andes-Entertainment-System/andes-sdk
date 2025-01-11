@@ -17,11 +17,11 @@ struct Rect {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case")]
 enum SplitMode {
     None,
-    Grid,   // { cols: usize, rows: usize },
-    Manual, // { frames: Vec<Rect> },
+    Grid,
+    Manual,
 }
 
 impl Default for SplitMode {
@@ -158,7 +158,7 @@ pub fn compile(
             }
             SplitMode::Grid => {
                 let sprite_width = width / settings.split.grid_cols;
-                let sprite_height = height / settings.split.grid_cols;
+                let sprite_height = height / settings.split.grid_rows;
 
                 for y in (0..height).step_by(sprite_height) {
                     for x in (0..width).step_by(sprite_width) {
