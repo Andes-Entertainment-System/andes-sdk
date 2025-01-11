@@ -1,5 +1,5 @@
 {
-  "$id": "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/sprite_settings.schema.json",
+  "$id": "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/spriteset_settings.schema.json",
   "$schema": "https://json-schema.org/draft-07/schema#",
   "title": "Andes SDK: Resource Config - Spriteset Settings",
   "description": "Schema for Andes SDK spriteset setting files.",

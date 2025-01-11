@@ -36,7 +36,7 @@
           "path": { "type": "string" },
           "settings_path": { "type": "string" },
           "settings": {
-            "$ref": "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/sprite_settings.schema.json"
+            "$ref": "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/spriteset_settings.schema.json"
           }
         },
         "required": [ "id", "path" ]
