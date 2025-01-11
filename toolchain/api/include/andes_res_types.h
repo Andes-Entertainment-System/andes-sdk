@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 struct PaletteResource {
-  uint16_t* data;
+  const uint8_t (*data)[3];
   uint64_t size;
 };
 
@@ -28,5 +28,5 @@ struct SpriteSetResource {
   uint64_t address;
   uint64_t size;
   void* data;
-  struct SpriteSetFrame* frames;
+  const struct SpriteSetFrame* frames;
 };

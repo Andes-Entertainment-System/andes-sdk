@@ -32,7 +32,7 @@ pub fn compile(
         let mut color_amount = 0;
 
         source_buffer.write_fmt(format_args!(
-            "const unsigned short DATA_{}[] = {{ ",
+            "const unsigned char DATA_{}[][3] = {{ ",
             item.id
         ))?;
 
@@ -49,9 +49,12 @@ pub fn compile(
                 })
                 .collect::<anyhow::Result<Vec<u16>>>()?;
 
-            let color: u16 = channels[0] >> 4 | channels[1] >> 4 << 4 | channels[2] >> 4 << 8;
+            let color = (channels[0] >> 2, channels[1] >> 2, channels[2] >> 2);
 
-            source_buffer.write_fmt(format_args!("0x{:x}, ", color))?;
+            source_buffer.write_fmt(format_args!(
+                "{{ 0x{:x}, 0x{:x}, 0x{:x} }}, ",
+                color.0, color.1, color.2
+            ))?;
             color_amount += 1;
         }
 
@@ -62,10 +65,10 @@ pub fn compile(
             item.id
         ))?;
         source_buffer.write_fmt(format_args!(
-            "struct PaletteResource RES_{} = {{ .data = &DATA_{}, .size = {} }};\n",
+            "struct PaletteResource RES_{} = {{ .data = DATA_{}, .size = {} }};\n",
             item.id,
             item.id,
-            color_amount * 2
+            color_amount * 3
         ))?;
     }
 

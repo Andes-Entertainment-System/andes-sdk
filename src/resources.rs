@@ -18,7 +18,7 @@ pub struct ResConfig {
     #[serde(default)]
     rawdata: Vec<rawdata::RawDataDef>,
     #[serde(default)]
-    sprites: Vec<spriteset::SpriteSetDef>,
+    spritesets: Vec<spriteset::SpriteSetDef>,
     #[serde(default)]
     tilesets: Vec<tileset::TileSetDef>,
 }

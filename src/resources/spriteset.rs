@@ -95,7 +95,7 @@ pub fn compile(
     header_buffer.write_all(b"\n// ---- spritesets ----\n")?;
     source_buffer.write_all(b"\n// ---- spritesets ----\n")?;
 
-    for item in res_config.sprites.iter() {
+    for item in res_config.spritesets.iter() {
         let decoder = png::Decoder::new(File::open(res_path.join(&item.path))?);
         let mut reader = decoder.read_info()?;
         let mut buf = vec![0; reader.output_buffer_size()];
@@ -189,7 +189,7 @@ pub fn compile(
             data_address,
             data_buffer.seek(SeekFrom::Current(0))? - data_address,
         ))?;
-        source_buffer.write_fmt(format_args!(".frames = &FRAMES_{} }};\n\n", item.id,))?;
+        source_buffer.write_fmt(format_args!(".frames = FRAMES_{} }};\n\n", item.id,))?;
     }
 
     Ok(())

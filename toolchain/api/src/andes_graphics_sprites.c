@@ -32,7 +32,7 @@ void SPR_addSprite(struct Sprite* sprite) {
 
 void SPR_updateSprite(struct Sprite* sprite) {
   struct SerializedSprite* internalSprite = &internalSprites[sprite->_id];
-  struct SpriteSetFrame* frame = &sprite->set->frames[sprite->frame];
+  const struct SpriteSetFrame* frame = &sprite->set->frames[sprite->frame];
 
   internalSprite->flags = sprite->flags.hFlip << 3 | sprite->flags.priority << 2 | sprite->flags.visible << 1 | 1;
   internalSprite->data = (uint8_t*)sprite->set->data + frame->offset;

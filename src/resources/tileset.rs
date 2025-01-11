@@ -12,7 +12,8 @@ use super::ResConfig;
 pub struct TileSetDef {
     id: String,
     path: String,
-    keep_duplicates: bool,
+    #[serde(default)]
+    skip_duplicates: bool,
 }
 
 pub fn compile(
@@ -35,26 +36,22 @@ pub fn compile(
         let width = info.width as usize;
         let height = info.height as usize;
 
-        let mut tiles: Vec<[u8; 32]> = Vec::new();
+        let mut tiles: Vec<[u8; 64]> = Vec::new();
         let mut tile_hashes: Vec<md5::Digest> = Vec::new();
 
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
         for ty in (0..height as usize).step_by(8) {
             for tx in (0..width as usize).step_by(8) {
-                let mut tile: [u8; 32] = [0; 32];
+                let mut tile: [u8; 64] = [0; 64];
 
                 for y in 0..8 {
-                    for x in (0..8).step_by(2) {
-                        tile[x / 2 + y * 4] = (bytes[tx + x + (ty + y) * width + 1] & 15)
-                            | ((bytes[tx + x + (ty + y) * width] & 15) << 4);
+                    for x in 0..8 {
+                        tile[x + y * 8] = bytes[tx + x + (ty + y) * width];
                     }
                 }
 
-                if item.keep_duplicates {
-                    data_buffer.write_all(&tile)?;
-                    tiles.push(tile);
-                } else {
+                if item.skip_duplicates {
                     let tile_hash = md5::compute(tile);
 
                     if !tile_hashes.contains(&tile_hash) {
@@ -62,6 +59,9 @@ pub fn compile(
                         tile_hashes.push(tile_hash);
                         tiles.push(tile);
                     }
+                } else {
+                    data_buffer.write_all(&tile)?;
+                    tiles.push(tile);
                 }
             }
         }
@@ -74,7 +74,7 @@ pub fn compile(
             "struct TileSetResource RES_{} = {{ .address = {}, .size = {} }};\n",
             item.id,
             data_address,
-            tiles.len() * 32
+            tiles.len() * 64
         ))?;
     }
 
