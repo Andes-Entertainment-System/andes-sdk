@@ -17,10 +17,11 @@ struct Rect {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(untagged)]
 enum SplitMode {
     None,
-    Grid { cols: usize, rows: usize },
-    Manual { frames: Vec<Rect> },
+    Grid,   // { cols: usize, rows: usize },
+    Manual, // { frames: Vec<Rect> },
 }
 
 impl Default for SplitMode {
@@ -29,19 +30,35 @@ impl Default for SplitMode {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct SpriteDefSettings {
+#[derive(Serialize, Deserialize, Default)]
+struct SplitOptions {
     #[serde(default)]
-    split: SplitMode,
+    mode: SplitMode,
+    #[serde(default)]
+    grid_cols: usize,
+    #[serde(default)]
+    grid_rows: usize,
+    #[serde(default)]
+    manual_frames: Vec<Rect>,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+pub struct SpriteDefSettings {
+    #[serde(default)]
+    split: SplitOptions,
+}
+
+/*
 impl Default for SpriteDefSettings {
     fn default() -> Self {
         Self {
-            split: SplitMode::None,
+            split: SplitOptions {
+                mode: SplitMode::None,
+                grid_,
+            },
         }
     }
-}
+}*/
 
 #[derive(Serialize, Deserialize)]
 pub struct SpriteSetDef {
@@ -121,7 +138,7 @@ pub fn compile(
             None => &item.settings,
         };
 
-        match &settings.split {
+        match &settings.split.mode {
             SplitMode::None => {
                 source_buffer.write_fmt(format_args!(
                     "  {{ .offset = 0, .width = {}, .height = {} }},\n",
@@ -139,9 +156,9 @@ pub fn compile(
                     width,
                 ))?;
             }
-            SplitMode::Grid { cols, rows } => {
-                let sprite_width = width / cols;
-                let sprite_height = height / rows;
+            SplitMode::Grid => {
+                let sprite_width = width / settings.split.grid_cols;
+                let sprite_height = height / settings.split.grid_cols;
 
                 for y in (0..height).step_by(sprite_height) {
                     for x in (0..width).step_by(sprite_width) {
@@ -165,8 +182,8 @@ pub fn compile(
                     }
                 }
             }
-            SplitMode::Manual { frames: bounds } => {
-                for region in bounds.iter() {
+            SplitMode::Manual => {
+                for region in settings.split.manual_frames.iter() {
                     source_buffer.write_fmt(format_args!(
                         "  {{ .offset = {}, .width = {}, .height = {} }},\n",
                         data_buffer.seek(SeekFrom::Current(0))? - data_address,

@@ -1,7 +1,6 @@
 {
   "C_Cpp.default.compilerPath": "${ANDES_SDK_DIR},bin/clang",
   "files.associations": {
-    "*.lemon": "c",
     "andes_tiles.h": "c",
     "cstdint": "cpp"
   }

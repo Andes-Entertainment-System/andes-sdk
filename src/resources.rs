@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    io::{self, BufWriter, Seek, SeekFrom, Write},
+    io::{BufWriter, Seek, SeekFrom, Write},
     path::Path,
 };
 
