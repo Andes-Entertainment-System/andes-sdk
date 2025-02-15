@@ -3,6 +3,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/**
+ * Get the sprite's width according to the frame and spriteset it's currently using.
+ */
+#define SPRITE_WIDTH(sprite) sprite.set->frames[sprite.frame]->width
+/**
+ * Get the sprite's height according to the frame and spriteset it's currently using.
+ */
+#define SPRITE_HEIGHT(sprite) sprite.set->frames[sprite.frame]->height
+
 struct Sprite {
   uint8_t _id;
   struct SpriteSetResource* set;

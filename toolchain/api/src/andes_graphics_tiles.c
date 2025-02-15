@@ -3,8 +3,8 @@
 
 void TIL_loadTileSet(struct TileSetResource* res) { STO_copyDiskToRegister(REG_TILEMAP, 0, res->address, res->size); }
 
-void TIL_loadTileSetAt(struct TileSetResource* res, uint32_t address) {
-  STO_copyDiskToRegister(REG_TILEMAP, address, res->address, res->size);
+void TIL_loadTileSetAt(struct TileSetResource* res, uint32_t offset) {
+  STO_copyDiskToRegister(REG_TILEMAP, offset * 64, res->address, res->size);
 }
 
 void TIL_setPlaneHScrollTable(enum TilePlane plane, uint32_t row, uint32_t* offsets, uint32_t n) {

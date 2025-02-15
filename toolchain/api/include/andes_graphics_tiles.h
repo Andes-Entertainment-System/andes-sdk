@@ -7,7 +7,7 @@ enum TilePlane {
 };
 
 void TIL_loadTileSet(struct TileSetResource* res);
-void TIL_loadTileSetAt(struct TileSetResource* res, uint32_t address);
+void TIL_loadTileSetAt(struct TileSetResource* res, uint32_t offset);
 
 /**
  * @brief In the specified tile plane, starting from the row of tiles located at `row` and going down, set `n` amount of
