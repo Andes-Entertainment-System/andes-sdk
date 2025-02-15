@@ -1,4 +1,5 @@
 #include <andes_audio.h>
+#include <andes_storage.h>
 
 void SFX_playMusic(struct MusicResource* res) { I_SFX_playMusicFromDisk(res->address, res->size); }
 

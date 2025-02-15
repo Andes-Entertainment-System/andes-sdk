@@ -2,6 +2,7 @@
 
 #include <andes_res_types.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #define SFX_SAMPLE_RATE 48000
 
