@@ -9,6 +9,7 @@
       "defines": [],
       "cStandard": "c17",
       "cppStandard": "c++17",
+      "compilerPath": "/usr/bin/gcc",
       "intelliSenseMode": "linux-clang-x64",
       "configurationProvider": "ms-vscode.cmake-tools"
     }
