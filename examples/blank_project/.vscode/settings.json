@@ -1,6 +1,6 @@
 {
   "yaml.schemas": {
-    "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/resource_config.schema.json": "resources/config.yml",
-    "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/spriteset_settings.schema.json": "resources/sprite{s, sets}/**/*.yml",
+    "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/resource_config.schema.json": "resources/config.yml",
+    "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/spriteset_settings.schema.json": "resources/sprite{s, sets}/**/*.yml",
   },
 }

@@ -1,6 +1,6 @@
 {
   "$id": "https://sneezingcactus.github.io/andes-sdk/toolchain/yaml/resource_config.schema.json",
-  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
   "title": "Andes SDK: Resource Config",
   "description": "Schema for the Andes SDK resource configuration file.",
   "type": "object",
