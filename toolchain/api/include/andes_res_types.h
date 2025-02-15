@@ -30,3 +30,16 @@ struct SpriteSetResource {
   void* data;
   const struct SpriteSetFrame* frames;
 };
+
+struct SoundResource {
+  uint64_t address;
+  uint64_t size;
+  void* data;
+  uint64_t dataSize;
+};
+
+struct MusicResource {
+  uint64_t address;
+  uint64_t size;
+  float loopPoint;
+};

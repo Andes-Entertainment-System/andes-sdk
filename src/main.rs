@@ -1,32 +1,37 @@
 use anyhow::anyhow;
 use clap::{arg, Command};
-use std::{env, fs::File, io, path::Path, process, time::Instant};
+use std::{
+    env,
+    fs::File,
+    io::{self, Read},
+    path::Path,
+    process, time,
+    time::Instant,
+};
 
 mod resources;
 
 fn build(project_path: &Path) -> anyhow::Result<()> {
     resources::compile_all(project_path)?;
 
-    let output = process::Command::new("cmake")
+    let cmd = process::Command::new("cmake")
         .current_dir(project_path)
         .arg(".")
-        .output()?;
+        .stdout(process::Stdio::inherit())
+        .stderr(process::Stdio::inherit())
+        .spawn()?;
 
-    println!("{}", String::from_utf8_lossy(&output.stdout));
-    println!("{}", String::from_utf8_lossy(&output.stderr));
-
-    if !output.status.success() {
+    if !cmd.wait_with_output()?.status.success() {
         return Err(anyhow!("CMake configuration failed"));
     }
 
-    let output = process::Command::new("make")
+    let cmd = process::Command::new("make")
         .current_dir(project_path)
-        .output()?;
+        .stdout(process::Stdio::inherit())
+        .stderr(process::Stdio::inherit())
+        .spawn()?;
 
-    println!("{}", String::from_utf8_lossy(&output.stdout));
-    println!("{}", String::from_utf8_lossy(&output.stderr));
-
-    if !output.status.success() {
+    if !cmd.wait_with_output()?.status.success() {
         return Err(anyhow!("App build failed"));
     }
 
@@ -44,6 +49,23 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn sideload(file_path: &Path) -> anyhow::Result<()> {
+    let mut port = serialport::new("/dev/ttyUSB0", 230400)
+        .timeout(time::Duration::from_millis(10))
+        .dtr_on_open(true)
+        .preserve_dtr_on_open()
+        .open()?;
+
+    let mut app_file = File::open(file_path)?;
+    let mut data: Vec<u8> = vec![0; app_file.metadata()?.len() as usize];
+    app_file.read(&mut data)?;
+
+    port.write(&(data.len() as u32).to_le_bytes())?; // file size
+    port.write(&data)?; // the actual file
+
+    Ok(())
+}
+
 fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
@@ -53,6 +75,12 @@ fn main() {
                 .about("placeholder")
                 .arg(arg!([DIRECTORY])),
         )
+        .subcommand(
+            Command::new("sideload")
+                .about("placeholder")
+                .arg(arg!([FILE]))
+                .arg(arg!([PORT])),
+        )
         .subcommand(Command::new("new").about("placeholder"));
     let matches = command.get_matches();
 
@@ -61,19 +89,39 @@ fn main() {
             let default_path = env::current_dir().unwrap_or(Path::new("").to_path_buf());
             let project_path_str: Option<&String> = sub_matches.get_one("DIRECTORY");
 
-            let build_result: anyhow::Result<()>;
-            let build_time = Instant::now();
+            let result: anyhow::Result<()>;
+            let start_time = Instant::now();
 
             match project_path_str {
-                Some(x) => build_result = build(&Path::new(x)),
-                None => build_result = build(&default_path),
+                Some(x) => result = build(&Path::new(x)),
+                None => result = build(&default_path),
             }
 
-            match build_result {
+            match result {
                 Err(x) => println!("BUILD ABORTED: {}", x),
                 Ok(_) => println!(
                     "BUILD SUCCESSFUL: took {} seconds",
-                    build_time.elapsed().as_millis() as f64 / 1000.0
+                    start_time.elapsed().as_millis() as f64 / 1000.0
+                ),
+            }
+        }
+        Some(("sideload", sub_matches)) => {
+            let default_path = env::current_dir().unwrap_or(Path::new("").to_path_buf());
+            let file_path_str: Option<&String> = sub_matches.get_one("FILE");
+
+            let result: anyhow::Result<()>;
+            let start_time = Instant::now();
+
+            match file_path_str {
+                Some(x) => result = sideload(&Path::new(x)),
+                None => result = sideload(&default_path.join("build/out.bin")),
+            }
+
+            match result {
+                Err(x) => println!("SIDELOAD ABORTED: {}", x),
+                Ok(_) => println!(
+                    "SIDELOAD SUCCESSFUL: took {} seconds",
+                    start_time.elapsed().as_millis() as f64 / 1000.0
                 ),
             }
         }

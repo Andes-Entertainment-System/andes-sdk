@@ -2,23 +2,17 @@ if (NOT DEFINED WASI_SDK_DIR)
     set (WASI_SDK_DIR               "/opt/wasi-sdk")
 endif ()
 
-set (CMAKE_SYSTEM_PROCESSOR wasm32)
-set (CMAKE_SYSROOT                  $ENV{WASI_SDK_DIR}/share/wasi-sysroot)
+set (CMAKE_TOOLCHAIN_FILE $ENV{WASI_SDK_DIR}/share/cmake/wasi-sdk.cmake)
+set (CMAKE_SYSROOT $ENV{WASI_SDK_DIR}/share/wasi-sysroot)
 
-set (CMAKE_CXX_FLAGS                  "-O2")
-set (CMAKE_CXX_COMPILER_TARGET        "wasm32-wasi")
-set (CMAKE_CXX_COMPILER               "${WASI_SDK_DIR}/bin/clang++")
-
-set(CMAKE_TOOLCHAIN_FILE $ENV{WASI_SDK_DIR}/share/cmake/wasi-sdk.cmake)
+set (CMAKE_CXX_FLAGS "-O2")
 
 set (CMAKE_EXE_LINKER_FLAGS
-    "-DWAMR_BUILD_LIBC_WASI=1 \
-     -Wno-incompatible-pointer-types \
-     -Wl,--max-memory=983040 -z stack-size=500000   \
-     -Wl,--no-entry,--strip-all                   \
+    "-Wl,--max-memory=1048576 -z stack-size=524288   \
+     -Wl,--no-entry -Wl,--strip-all \
      -Wl,--export=I_setup                \
      -Wl,--export=I_process                \
-     -Wl,--export=__heap_base,--export=__data_end \
+     -Wl,--export=__heap_base -Wl,--export=__data_end -Wl,--export=malloc -Wl,--export=free \
      -Wl,--allow-undefined   \
      -fno-exceptions"
 )

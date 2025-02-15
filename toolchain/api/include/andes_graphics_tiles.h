@@ -9,12 +9,20 @@ enum TilePlane {
 void TIL_loadTileSet(struct TileSetResource* res);
 void TIL_loadTileSetAt(struct TileSetResource* res, uint32_t address);
 
+/**
+ * @brief In the specified tile plane, starting from the row of tiles located at `row` and going down, set `n` amount of
+ *        values from the plane's horizontal scroll offset table to the values in `offsets`.
+ */
+void TIL_setPlaneHScrollTable(enum TilePlane plane, uint32_t row, uint32_t* offsets, uint32_t n);
+/**
+ * @brief Set `x` (horizontal) and `y` (vertical) base scroll values for the specified tile plane.
+ */
 extern void TIL_setPlaneScrollXY(enum TilePlane plane, uint32_t x, uint32_t y);
 
 /**
  * @brief In the specified tile plane, set the tile located at (`x`, `y`) to the value of `tile`.
  */
-extern void TIL_setPlaneXY(enum TilePlane plane, uint32_t x, uint32_t y, uint16_t tile);
+extern void TIL_setPlaneSingle(enum TilePlane plane, uint32_t x, uint32_t y, uint16_t tile);
 /**
  * @brief In the specified tile plane, starting from the tile located at (`x`, `y`) and going down, set `n` amount of
  *        tiles to the values in `tiles`.
