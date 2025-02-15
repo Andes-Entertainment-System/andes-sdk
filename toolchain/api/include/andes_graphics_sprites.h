@@ -6,11 +6,11 @@
 /**
  * Get the sprite's width according to the frame and spriteset it's currently using.
  */
-#define SPR_SPRITE_WIDTH(sprite) sprite.set->frames[sprite.frame]->width
+#define SPR_SPRITE_WIDTH(sprite) sprite->set->frames[sprite.frame].width
 /**
  * Get the sprite's height according to the frame and spriteset it's currently using.
  */
-#define SPR_SPRITE_HEIGHT(sprite) sprite.set->frames[sprite.frame]->height
+#define SPR_SPRITE_HEIGHT(sprite) sprite->set->frames[sprite.frame].height
 
 struct Sprite {
   uint8_t _id;
