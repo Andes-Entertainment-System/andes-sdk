@@ -8,7 +8,7 @@ set (CMAKE_SYSROOT $ENV{WASI_SDK_DIR}/share/wasi-sysroot)
 set (CMAKE_CXX_FLAGS "-O2")
 
 set (CMAKE_EXE_LINKER_FLAGS
-    "-Wl,--max-memory=1048576 -z stack-size=524288   \
+    "-nostdlib -Wl,--max-memory=1048576 -z stack-size=524288   \
      -Wl,--no-entry -Wl,--strip-all \
      -Wl,--export=I_setup                \
      -Wl,--export=I_process                \
