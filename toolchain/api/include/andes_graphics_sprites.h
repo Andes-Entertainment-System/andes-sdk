@@ -3,47 +3,35 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-/**
- * Get the sprite's width according to the frame and spriteset it's currently using.
- */
-#define SPR_SPRITE_WIDTH(sprite) (sprite)->set->frames[(sprite)->frame].width
-/**
- * Get the sprite's height according to the frame and spriteset it's currently using.
- */
-#define SPR_SPRITE_HEIGHT(sprite) (sprite)->set->frames[(sprite)->frame].height
-
 struct Sprite {
-  uint8_t _id;
+  struct {
+    uint32_t dataPtr;
+    uint32_t width;
+    uint32_t height;
+  } I_source;
   struct SpriteSetResource* set;
   uint32_t frame;
   struct {
-    int16_t x;
-    int16_t y;
+    int32_t x;
+    int32_t y;
   } position;
   struct {
     bool visible;
     bool priority;
     bool hFlip;
+    bool vFlip;
   } flags;
-};
-
-struct SerializedSprite {
-  void* data;
-  uint32_t width;
-  uint32_t height;
-  int32_t xPos;
-  int32_t yPos;
-  uint8_t flags;
+  int32_t zIndex;
+  uint32_t I_prev;
+  uint32_t I_next;
 };
 
 void SPR_loadSpriteSet(struct SpriteSetResource* res);
 void SPR_unloadSpriteSet(struct SpriteSetResource* res);
-void SPR_addSprite(struct Sprite* sprite);
-void SPR_updateSprite(struct Sprite* sprite);
-void SPR_removeSprite(struct Sprite* sprite);
-void SPR_updateAllSprites();
-void SPR_removeAllSprites();
+extern void SPR_addSprite(struct Sprite* sprite);
+extern void SPR_sortSprite(struct Sprite* sprite);
+extern void SPR_removeSprite(struct Sprite* sprite);
+extern void SPR_removeAllSprites();
 
-void I_SPR_onRender();
-
-extern void I_SPR_transferSprites(struct SerializedSprite (*sprites)[128], bool (*updated)[128]);
+extern void I_SPR_setSpriteDataPtr(struct Sprite* sprite, void* data);
+void SPR_updateSpriteFrame(struct Sprite* sprite);
