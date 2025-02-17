@@ -25,13 +25,14 @@ struct Sprite {
   uint32_t I_prev;
   uint32_t I_next;
 };
+typedef struct Sprite Sprite;
 
-void SPR_loadSpriteSet(struct SpriteSetResource* res);
-void SPR_unloadSpriteSet(struct SpriteSetResource* res);
-extern void SPR_addSprite(struct Sprite* sprite);
-extern void SPR_sortSprite(struct Sprite* sprite);
-extern void SPR_removeSprite(struct Sprite* sprite);
+void SPR_loadSpriteSet(SpriteSetResource* res);
+void SPR_unloadSpriteSet(SpriteSetResource* res);
+extern void SPR_addSprite(Sprite* sprite);
+extern void SPR_sortSprite(Sprite* sprite);
+extern void SPR_removeSprite(Sprite* sprite);
 extern void SPR_removeAllSprites();
 
-extern void I_SPR_setSpriteDataPtr(struct Sprite* sprite, void* data);
-void SPR_updateSpriteFrame(struct Sprite* sprite);
+extern void I_SPR_setSpriteDataPtr(Sprite* sprite, void* data);
+void SPR_updateSpriteFrame(Sprite* sprite);

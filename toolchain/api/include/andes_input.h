@@ -2,9 +2,10 @@
 #include <stdint.h>
 
 enum InputDeviceType { DISCONNECTED, UNKNOWN, DUALSHOCK_4 };
+typedef enum InputDeviceType InputDeviceType;
 
 struct InputDevice {
-  enum InputDeviceType type;
+  InputDeviceType type;
   uint8_t address;
   struct {
     uint32_t buttons;
@@ -22,6 +23,7 @@ struct InputDevice {
     uint16_t accelZ;
   } state;
 };
+typedef struct InputDevice InputDevice;
 
 enum GamePadButton {
   BUTTON_X,
@@ -41,21 +43,24 @@ enum GamePadButton {
   BUTTON_DPADDOWN,
   BUTTON_DPADLEFT,
 };
+typedef enum GamePadButton GamePadButton;
 
 enum GamePadStick {
   STICK_LEFT,
   STICK_RIGHT,
 };
+typedef enum GamePadStick GamePadStick;
 
 enum GamePadTrigger {
   TRIGGER_LEFT,
   TRIGGER_RIGHT,
 };
+typedef enum GamePadTrigger GamePadTrigger;
 
-bool JOY_getButtonPressed(uint32_t pad, enum GamePadButton button);
-uint8_t JOY_getTrigger(uint32_t pad, enum GamePadTrigger trigger);
-uint8_t JOY_getStickX(uint32_t pad, enum GamePadStick stick);
-uint8_t JOY_getStickY(uint32_t pad, enum GamePadStick stick);
+bool JOY_getButtonPressed(uint32_t pad, GamePadButton button);
+uint8_t JOY_getTrigger(uint32_t pad, GamePadTrigger trigger);
+uint8_t JOY_getStickX(uint32_t pad, GamePadStick stick);
+uint8_t JOY_getStickY(uint32_t pad, GamePadStick stick);
 
 void I_JOY_transferInputs();
 

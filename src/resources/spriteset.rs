@@ -125,11 +125,11 @@ pub fn compile(
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
         header_buffer.write_fmt(format_args!(
-            "extern const struct SpriteSetFrame FRAMES_{}[];\n",
+            "extern const SpriteSetFrame FRAMES_{}[];\n",
             item.id
         ))?;
         source_buffer.write_fmt(format_args!(
-            "const struct SpriteSetFrame FRAMES_{}[] = {{\n",
+            "const SpriteSetFrame FRAMES_{}[] = {{\n",
             item.id
         ))?;
 
@@ -196,12 +196,9 @@ pub fn compile(
             }
         }
 
-        header_buffer.write_fmt(format_args!(
-            "extern struct SpriteSetResource RES_{};\n",
-            item.id
-        ))?;
+        header_buffer.write_fmt(format_args!("extern SpriteSetResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "}};\nstruct SpriteSetResource RES_{} = {{ .address = {}, .size = {}, ",
+            "}};\nSpriteSetResource RES_{} = {{ .address = {}, .size = {}, ",
             item.id,
             data_address,
             data_buffer.seek(SeekFrom::Current(0))? - data_address,

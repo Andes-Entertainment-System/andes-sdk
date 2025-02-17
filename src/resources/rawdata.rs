@@ -27,12 +27,9 @@ pub fn compile(
     for item in res_config.rawdata.iter() {
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
         data_buffer.write_all(&fs::read(res_path.join(&item.path))?)?;
-        header_buffer.write_fmt(format_args!(
-            "extern struct RawDataResource RES_{};\n",
-            item.id
-        ))?;
+        header_buffer.write_fmt(format_args!("extern RawDataResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "struct RawDataResource RES_{} = {{ .address = {}, .size = {} }};\n",
+            "RawDataResource RES_{} = {{ .address = {}, .size = {} }};\n",
             item.id,
             data_address,
             data_buffer.seek(SeekFrom::Current(0))? - data_address

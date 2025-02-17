@@ -60,12 +60,9 @@ pub fn compile(
 
         source_buffer.write_fmt(format_args!(" }};\n",))?;
 
-        header_buffer.write_fmt(format_args!(
-            "extern struct PaletteResource RES_{};\n",
-            item.id
-        ))?;
+        header_buffer.write_fmt(format_args!("extern PaletteResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "struct PaletteResource RES_{} = {{ .data = DATA_{}, .size = {} }};\n",
+            "PaletteResource RES_{} = {{ .data = DATA_{}, .size = {} }};\n",
             item.id,
             item.id,
             color_amount * 3

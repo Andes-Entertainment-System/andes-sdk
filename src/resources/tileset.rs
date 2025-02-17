@@ -66,12 +66,9 @@ pub fn compile(
             }
         }
 
-        header_buffer.write_fmt(format_args!(
-            "extern struct TileSetResource RES_{};\n",
-            item.id
-        ))?;
+        header_buffer.write_fmt(format_args!("extern TileSetResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "struct TileSetResource RES_{} = {{ .address = {}, .size = {} }};\n",
+            "TileSetResource RES_{} = {{ .address = {}, .size = {} }};\n",
             item.id,
             data_address,
             tiles.len() * 64

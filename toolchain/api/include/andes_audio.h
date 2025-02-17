@@ -14,7 +14,7 @@
 /**
  * @brief Play a music track. Only one music track can be active at any time.
  */
-void SFX_playMusic(struct MusicResource* res);
+void SFX_playMusic(MusicResource* res);
 
 /**
  * @brief Pause the current music track being played, or resume it if it's been paused before.
@@ -31,8 +31,8 @@ extern void SFX_seekMusic(uint64_t position);
  */
 extern void SFX_fadeOutMusic(uint64_t duration);
 
-void SFX_loadSound(struct SoundResource* res);
-void SFX_unloadSound(struct SoundResource* res);
+void SFX_loadSound(SoundResource* res);
+void SFX_unloadSound(SoundResource* res);
 
 /**
  * @brief Set the specified SFX channel's volume (0 to 1).
@@ -47,7 +47,7 @@ extern void SFX_setChannelPanning(uint8_t channel, float panning);
 /**
  * @brief Play a sound on the specified SFX channel.
  */
-void SFX_playSound(uint8_t channel, struct SoundResource* res);
+void SFX_playSound(uint8_t channel, SoundResource* res);
 
 /**
  * @brief Play Opus audio data located at `srcAddr` in the app file, with a size of `n` bytes.
