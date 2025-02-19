@@ -1,6 +1,27 @@
 #pragma once
 #include <andes_res_types.h>
 
+/**
+ * Assemble a tile descriptor for a plane, using the specified tile index, priority and flip flags.
+ */
+#define TILE_DESCRIPTOR(tileIndex, priority, hFlip, vFlip) \
+  ((tileIndex) | (priority) << 15 | (vFlip) << 14 | (hFlip) << 13)
+
+/**
+ * Get the horizontal flip flag from a tile descriptor.
+ */
+#define TILE_HFLIP_FLAG(tileDescriptor) ((tileDescriptor) >> 13 & 1)
+
+/**
+ * Get the vertical flip flag from a tile descriptor.
+ */
+#define TILE_VFLIP_FLAG(tileDescriptor) ((tileDescriptor) >> 14 & 1)
+
+/**
+ * Get the priority flag from a tile descriptor.
+ */
+#define TILE_PRIORITY_FLAG(tileDescriptor) ((tileDescriptor) >> 15)
+
 enum TilePlane {
   TILEPLANE_BG,
   TILEPLANE_FG,
