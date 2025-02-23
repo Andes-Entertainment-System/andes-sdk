@@ -1,7 +1,8 @@
 use std::{
+    collections::HashMap,
     fs::{self, File},
     io::{BufWriter, Seek, SeekFrom, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub mod palette;
 pub mod rawdata;
 pub mod spriteset;
+pub mod tilemap;
 pub mod tileset;
 
 #[derive(Serialize, Deserialize)]
@@ -21,26 +23,39 @@ pub struct ResConfig {
     spritesets: Vec<spriteset::SpriteSetDef>,
     #[serde(default)]
     tilesets: Vec<tileset::TileSetDef>,
+    #[serde(default)]
+    tilemaps: Vec<tilemap::TileMapDef>,
 }
 
-pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
-    let res_path = project_path.join("resources/");
+pub struct ResolvedResources {
+    tilesets: HashMap<String, tileset::ResolvedTileSet>,
+}
 
-    println!("{}", res_path.join("config.yml").to_str().unwrap());
+impl Default for ResolvedResources {
+    fn default() -> ResolvedResources {
+        ResolvedResources {
+            tilesets: HashMap::new(),
+        }
+    }
+}
 
-    let res_config: ResConfig =
-        serde_yml::from_reader(File::open(res_path.join("config.yml")).unwrap()).unwrap();
+pub struct ResCompilerArgs {
+    res_path: PathBuf,
+    res_config: ResConfig,
+    data_buffer: BufWriter<File>,
+    header_buffer: BufWriter<File>,
+    source_buffer: BufWriter<File>,
+    resolved: ResolvedResources,
+}
 
-    let _ = fs::create_dir(project_path.join("build"));
-
-    let data_file = fs::File::create(project_path.join("build/resources.bin")).unwrap();
-    let mut data_buffer = BufWriter::new(data_file);
-
-    let header_file = fs::File::create(res_path.join("andes_resources.h")).unwrap();
-    let mut header_buffer = BufWriter::new(header_file);
-    let source_file = fs::File::create(res_path.join("andes_resources.c")).unwrap();
-    let mut source_buffer = BufWriter::new(source_file);
-
+pub fn write_preamble(
+    ResCompilerArgs {
+        ref mut header_buffer,
+        ref mut data_buffer,
+        ref mut source_buffer,
+        ..
+    }: &mut ResCompilerArgs,
+) -> anyhow::Result<()> {
     data_buffer.write_all(b"ANDES     ")?;
     data_buffer.seek(SeekFrom::Current(8))?;
 
@@ -52,40 +67,54 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
     header_buffer.write_all(b"#pragma once\n\n#include <andes_res_types.h>\n\n")?;
     source_buffer.write_all(b"#include <andes_resources.h>\n\n")?;
 
-    palette::compile(
-        &res_path,
-        &res_config,
-        &mut data_buffer,
-        &mut header_buffer,
-        &mut source_buffer,
-    )?;
-    rawdata::compile(
-        &res_path,
-        &res_config,
-        &mut data_buffer,
-        &mut header_buffer,
-        &mut source_buffer,
-    )?;
-    spriteset::compile(
-        &res_path,
-        &res_config,
-        &mut data_buffer,
-        &mut header_buffer,
-        &mut source_buffer,
-    )?;
-    tileset::compile(
-        &res_path,
-        &res_config,
-        &mut data_buffer,
-        &mut header_buffer,
-        &mut source_buffer,
-    )?;
+    Ok(())
+}
 
+pub fn write_data_length(
+    ResCompilerArgs {
+        ref mut data_buffer,
+        ..
+    }: &mut ResCompilerArgs,
+) -> anyhow::Result<()> {
     let res_data_length = data_buffer.seek(SeekFrom::Current(0))?.to_le_bytes();
     data_buffer.seek(SeekFrom::Start(10))?;
     data_buffer.write_all(&res_data_length)?;
 
     data_buffer.seek(SeekFrom::End(0))?;
+
+    Ok(())
+}
+
+pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
+    let res_path = project_path.join("resources/");
+
+    let res_config: ResConfig = serde_yml::from_reader(File::open(res_path.join("config.yml"))?)?;
+
+    let _ = fs::create_dir(project_path.join("build"));
+
+    let data_file = fs::File::create(project_path.join("build/resources.bin"))?;
+
+    let header_file = fs::File::create(res_path.join("andes_resources.h"))?;
+    let source_file = fs::File::create(res_path.join("andes_resources.c"))?;
+
+    let mut compiler_args = ResCompilerArgs {
+        res_path: res_path,
+        res_config: res_config,
+        data_buffer: BufWriter::new(data_file),
+        header_buffer: BufWriter::new(header_file),
+        source_buffer: BufWriter::new(source_file),
+        resolved: ResolvedResources::default(),
+    };
+
+    write_preamble(&mut compiler_args)?;
+
+    palette::compile(&mut compiler_args)?;
+    rawdata::compile(&mut compiler_args)?;
+    spriteset::compile(&mut compiler_args)?;
+    tileset::compile(&mut compiler_args)?;
+    tilemap::compile(&mut compiler_args)?;
+
+    write_data_length(&mut compiler_args)?;
 
     Ok(())
 }

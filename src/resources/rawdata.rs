@@ -1,12 +1,11 @@
 use std::{
-    fs::{self, File},
-    io::{BufWriter, Seek, SeekFrom, Write},
-    path::PathBuf,
+    fs,
+    io::{Seek, SeekFrom, Write},
 };
 
 use serde::{Deserialize, Serialize};
 
-use super::ResConfig;
+use super::ResCompilerArgs;
 
 #[derive(Serialize, Deserialize)]
 pub struct RawDataDef {
@@ -15,11 +14,14 @@ pub struct RawDataDef {
 }
 
 pub fn compile(
-    res_path: &PathBuf,
-    res_config: &ResConfig,
-    data_buffer: &mut BufWriter<File>,
-    header_buffer: &mut BufWriter<File>,
-    source_buffer: &mut BufWriter<File>,
+    ResCompilerArgs {
+        ref mut header_buffer,
+        ref mut data_buffer,
+        ref mut source_buffer,
+        res_config,
+        res_path,
+        ..
+    }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
     header_buffer.write_all(b"\n// ---- rawdata ----\n")?;
     source_buffer.write_all(b"\n// ---- rawdata ----\n")?;

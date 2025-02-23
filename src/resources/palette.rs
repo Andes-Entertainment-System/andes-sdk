@@ -1,13 +1,9 @@
-use std::{
-    fs::{self, File},
-    io::{BufWriter, Write},
-    path::PathBuf,
-};
+use std::{fs, io::Write};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
-use super::ResConfig;
+use super::ResCompilerArgs;
 
 #[derive(Serialize, Deserialize)]
 pub struct PaletteDef {
@@ -16,11 +12,13 @@ pub struct PaletteDef {
 }
 
 pub fn compile(
-    res_path: &PathBuf,
-    res_config: &ResConfig,
-    _data_buffer: &mut BufWriter<File>,
-    header_buffer: &mut BufWriter<File>,
-    source_buffer: &mut BufWriter<File>,
+    ResCompilerArgs {
+        ref mut header_buffer,
+        ref mut source_buffer,
+        res_config,
+        res_path,
+        ..
+    }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
     header_buffer.write_all(b"\n// ---- palettes ----\n")?;
     source_buffer.write_all(b"\n// ---- palettes ----\n")?;

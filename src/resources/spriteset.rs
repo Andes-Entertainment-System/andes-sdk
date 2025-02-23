@@ -1,12 +1,11 @@
 use std::{
     fs::File,
-    io::{BufWriter, Seek, SeekFrom, Write},
-    path::PathBuf,
+    io::{Seek, SeekFrom, Write},
 };
 
 use serde::{Deserialize, Serialize};
 
-use super::ResConfig;
+use super::ResCompilerArgs;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct Rect {
@@ -47,18 +46,6 @@ pub struct SpriteDefSettings {
     #[serde(default)]
     split: SplitOptions,
 }
-
-/*
-impl Default for SpriteDefSettings {
-    fn default() -> Self {
-        Self {
-            split: SplitOptions {
-                mode: SplitMode::None,
-                grid_,
-            },
-        }
-    }
-}*/
 
 #[derive(Serialize, Deserialize)]
 pub struct SpriteSetDef {
@@ -103,11 +90,14 @@ fn convert_sprite(bytes: &[u8], region: Rect, image_width: usize) -> Vec<u8> {
 }
 
 pub fn compile(
-    res_path: &PathBuf,
-    res_config: &ResConfig,
-    data_buffer: &mut BufWriter<File>,
-    header_buffer: &mut BufWriter<File>,
-    source_buffer: &mut BufWriter<File>,
+    ResCompilerArgs {
+        ref mut header_buffer,
+        ref mut data_buffer,
+        ref mut source_buffer,
+        res_config,
+        res_path,
+        ..
+    }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
     header_buffer.write_all(b"\n// ---- spritesets ----\n")?;
     source_buffer.write_all(b"\n// ---- spritesets ----\n")?;
