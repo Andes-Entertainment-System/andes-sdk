@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /**
- * @brief Get a pseudo-random 32 bit integer number.
+ * @brief Get a pseudo-random 32 bit integer between 0 and the largest possible signed 32 bit value.
  */
 extern int32_t SYS_getRandom();
 
