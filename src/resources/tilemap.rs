@@ -31,7 +31,7 @@ pub enum TileMapError {
 
     // the rust formatter just wouldn't give up on formatting this one like this, EVEN THOUGH the other ones are even longer
     #[error(
-        "Tilemap at '{0}' uses a TSX tileset composed of metatiles that don't match the size of the map's tile grid."
+        "Tilemap at '{0}' uses a TSX tileset composed of chunks that don't match the size of the map's tile grid."
     )]
     TileGridAndTileSetDontMatch(PathBuf),
 }
@@ -80,7 +80,7 @@ pub fn compile(
                 |tileset| Ok(tileset.id.clone()),
             )?;
 
-        // metatile size checks
+        // chunk size checks
         if !tilemap.tile_width.is_power_of_two()
             || !tilemap.tile_width < 8
             || !tilemap.tile_height.is_power_of_two()
@@ -93,7 +93,7 @@ pub fn compile(
             return Err(TileMapError::TileGridAndTileSetDontMatch(item.path.clone()).into());
         }
 
-        let mut metatile_layout: Vec<u16> = vec![0; (tilemap.width * tilemap.height) as usize];
+        let mut chunk_layout: Vec<u16> = vec![0; (tilemap.width * tilemap.height) as usize];
 
         for layer in tilemap.layers() {
             match layer.layer_type() {
@@ -103,21 +103,21 @@ pub fn compile(
 
                     let process_tile = if layer.name.ends_with("high") {
                         // high priority layer
-                        |id: u32, flip_h: bool, flip_v: bool, metatile: &mut u16| {
-                            *metatile = (id & 8191) as u16;
-                            *metatile |= (flip_v as u16) << 13 | (flip_h as u16) << 14 | 1 << 15;
+                        |id: u32, flip_h: bool, flip_v: bool, chunk: &mut u16| {
+                            *chunk = (id & 8191) as u16;
+                            *chunk |= (flip_v as u16) << 13 | (flip_h as u16) << 14 | 1 << 15;
                         }
                     } else if layer.name.ends_with("priority") {
                         // priority layer (changes tile priority according to tile presence, no tile is low and tile is high)
-                        |id: u32, _flip_h: bool, _flip_v: bool, metatile: &mut u16| {
-                            *metatile &= !(1 << 15);
-                            *metatile |= (id.min(1) as u16) << 15;
+                        |id: u32, _flip_h: bool, _flip_v: bool, chunk: &mut u16| {
+                            *chunk &= !(1 << 15);
+                            *chunk |= (id.min(1) as u16) << 15;
                         }
                     } else {
                         // low priority layer
-                        |id: u32, flip_h: bool, flip_v: bool, metatile: &mut u16| {
-                            *metatile = (id & 8191) as u16;
-                            *metatile |= (flip_v as u16) << 13 | (flip_h as u16) << 14;
+                        |id: u32, flip_h: bool, flip_v: bool, chunk: &mut u16| {
+                            *chunk = (id & 8191) as u16;
+                            *chunk |= (flip_v as u16) << 13 | (flip_h as u16) << 14;
                         }
                     };
 
@@ -129,16 +129,11 @@ pub fn compile(
                                         tile.id(),
                                         tile.flip_h,
                                         tile.flip_v,
-                                        &mut metatile_layout[x + y * width],
+                                        &mut chunk_layout[x + y * width],
                                     );
                                 }
                                 None => {
-                                    process_tile(
-                                        0,
-                                        false,
-                                        false,
-                                        &mut metatile_layout[x + y * width],
-                                    );
+                                    process_tile(0, false, false, &mut chunk_layout[x + y * width]);
                                 }
                             };
                         }
@@ -151,20 +146,20 @@ pub fn compile(
 
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
-        for descriptor in metatile_layout {
+        for descriptor in chunk_layout {
             data_buffer.write_all(&descriptor.to_le_bytes())?;
         }
 
         header_buffer.write_fmt(format_args!("extern TileMapResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "TileMapResource RES_{} = {{ .layoutAddress = {}, .layoutSize = {}, .layoutWidth = {}, .layoutHeight = {}, .metatileWidth = {}, .metatileHeight = {}, .tileSet = &RES_{} }};\n",
+            "TileMapResource RES_{} = {{ .layoutAddress = {}, .layoutSize = {}, .layoutWidth = {}, .layoutHeight = {}, .chunkWidth = {}, .chunkHeight = {}, .tileSet = &RES_{} }};\n",
             item.id,
             data_address,
             data_buffer.seek(SeekFrom::Current(0))? - data_address,
             tilemap.width,
             tilemap.height,
-            tilemap.tile_width,
-            tilemap.tile_height,
+            tilemap.tile_width / 8,
+            tilemap.tile_height / 8,
             tileset_id,
         ))?;
     }
