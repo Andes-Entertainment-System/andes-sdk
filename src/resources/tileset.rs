@@ -1,22 +1,20 @@
 use std::{
-    fs::File,
     io::{Seek, SeekFrom, Write},
+    path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
+
+use crate::utils;
 
 use super::ResCompilerArgs;
 
 #[derive(Serialize, Deserialize)]
 pub struct TileSetDef {
-    id: String,
-    path: String,
+    pub id: String,
+    pub path: PathBuf,
     #[serde(default)]
-    skip_duplicates: bool,
-}
-
-pub struct ResolvedTileSet {
-    tile_hashes: Vec<md5::Digest>,
+    keep_duplicates: bool,
 }
 
 pub fn compile(
@@ -25,7 +23,6 @@ pub fn compile(
         ref mut data_buffer,
         ref mut source_buffer,
         res_config,
-        res_path,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -33,14 +30,12 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- tilesets ----\n")?;
 
     for item in res_config.tilesets.iter() {
-        let decoder = png::Decoder::new(File::open(res_path.join(&item.path))?);
-        let mut reader = decoder.read_info()?;
-        let mut buf = vec![0; reader.output_buffer_size()];
-        let info = reader.next_frame(&mut buf)?;
-
-        let bytes = &buf[..info.buffer_size()];
-        let width = info.width as usize;
-        let height = info.height as usize;
+        let utils::Image {
+            buffer,
+            width,
+            height,
+            ..
+        } = utils::load_indexed_image(&item.path)?;
 
         let mut tiles: Vec<[u8; 64]> = Vec::new();
         let mut tile_hashes: Vec<md5::Digest> = Vec::new();
@@ -53,11 +48,11 @@ pub fn compile(
 
                 for y in 0..8 {
                     for x in 0..8 {
-                        tile[x + y * 8] = bytes[tx + x + (ty + y) * width];
+                        tile[x + y * 8] = buffer[tx + x + (ty + y) * width];
                     }
                 }
 
-                if item.skip_duplicates {
+                if !item.keep_duplicates {
                     let tile_hash = md5::compute(tile);
 
                     if !tile_hashes.contains(&tile_hash) {

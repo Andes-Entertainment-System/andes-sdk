@@ -9,7 +9,8 @@ use std::{
     time::Instant,
 };
 
-mod resources;
+pub mod resources;
+pub mod utils;
 
 fn build(project_path: &Path) -> anyhow::Result<()> {
     resources::compile_all(project_path)?;

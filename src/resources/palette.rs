@@ -1,4 +1,4 @@
-use std::{fs, io::Write};
+use std::{fs, io::Write, path::PathBuf};
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use super::ResCompilerArgs;
 #[derive(Serialize, Deserialize)]
 pub struct PaletteDef {
     id: String,
-    path: String,
+    path: PathBuf,
 }
 
 pub fn compile(
@@ -16,7 +16,6 @@ pub fn compile(
         ref mut header_buffer,
         ref mut source_buffer,
         res_config,
-        res_path,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -24,7 +23,7 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- palettes ----\n")?;
 
     for item in res_config.palettes.iter() {
-        let content = fs::read_to_string(res_path.join(&item.path))?;
+        let content = fs::read_to_string(&item.path)?;
         let content_lines = content.split('\n');
 
         let mut color_amount = 0;

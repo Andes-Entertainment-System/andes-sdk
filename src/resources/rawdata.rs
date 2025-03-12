@@ -1,6 +1,7 @@
 use std::{
     fs,
     io::{Seek, SeekFrom, Write},
+    path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,7 @@ use super::ResCompilerArgs;
 #[derive(Serialize, Deserialize)]
 pub struct RawDataDef {
     id: String,
-    path: String,
+    path: PathBuf,
 }
 
 pub fn compile(
@@ -19,7 +20,6 @@ pub fn compile(
         ref mut data_buffer,
         ref mut source_buffer,
         res_config,
-        res_path,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -28,7 +28,7 @@ pub fn compile(
 
     for item in res_config.rawdata.iter() {
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
-        data_buffer.write_all(&fs::read(res_path.join(&item.path))?)?;
+        data_buffer.write_all(&fs::read(&item.path)?)?;
         header_buffer.write_fmt(format_args!("extern RawDataResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
             "RawDataResource RES_{} = {{ .address = {}, .size = {} }};\n",

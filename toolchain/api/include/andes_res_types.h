@@ -21,6 +21,17 @@ struct TileSetResource {
 };
 typedef struct TileSetResource TileSetResource;
 
+struct TileMapResource {
+  uint64_t layoutAddress;
+  uint64_t layoutSize;
+  uint32_t layoutWidth;
+  uint32_t layoutHeight;
+  uint32_t metatileWidth;
+  uint32_t metatileHeight;
+  TileSetResource* tileSet;
+};
+typedef struct TileMapResource TileMapResource;
+
 struct SpriteSetFrame {
   uint32_t offset;
   uint32_t width;

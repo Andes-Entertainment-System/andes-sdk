@@ -1,9 +1,12 @@
 use std::{
     fs::File,
     io::{Seek, SeekFrom, Write},
+    path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
+
+use crate::utils;
 
 use super::ResCompilerArgs;
 
@@ -50,8 +53,8 @@ pub struct SpriteDefSettings {
 #[derive(Serialize, Deserialize)]
 pub struct SpriteSetDef {
     id: String,
-    path: String,
-    settings_path: Option<String>,
+    path: PathBuf,
+    settings_path: Option<PathBuf>,
     #[serde(default)]
     settings: SpriteDefSettings,
 }
@@ -95,7 +98,6 @@ pub fn compile(
         ref mut data_buffer,
         ref mut source_buffer,
         res_config,
-        res_path,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -103,14 +105,12 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- spritesets ----\n")?;
 
     for item in res_config.spritesets.iter() {
-        let decoder = png::Decoder::new(File::open(res_path.join(&item.path))?);
-        let mut reader = decoder.read_info()?;
-        let mut buf = vec![0; reader.output_buffer_size()];
-        let info = reader.next_frame(&mut buf)?;
-
-        let bytes = &buf[..info.buffer_size()];
-        let width = info.width as usize;
-        let height = info.height as usize;
+        let utils::Image {
+            buffer: bytes,
+            width,
+            height,
+            ..
+        } = utils::load_indexed_image(&item.path)?;
 
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
@@ -124,7 +124,7 @@ pub fn compile(
         ))?;
 
         let settings = match &item.settings_path {
-            Some(path) => &serde_yml::from_reader(File::open(res_path.join(path))?).unwrap(),
+            Some(path) => &serde_yml::from_reader(File::open(path)?).unwrap(),
             None => &item.settings,
         };
 
@@ -136,7 +136,7 @@ pub fn compile(
                 ))?;
 
                 data_buffer.write_all(&convert_sprite(
-                    bytes,
+                    &bytes,
                     Rect {
                         x: 0,
                         y: 0,
@@ -160,7 +160,7 @@ pub fn compile(
                         ))?;
 
                         data_buffer.write_all(&convert_sprite(
-                            bytes,
+                            &bytes,
                             Rect {
                                 x,
                                 y,
@@ -181,7 +181,7 @@ pub fn compile(
                         region.height
                     ))?;
 
-                    data_buffer.write_all(&convert_sprite(bytes, region.clone(), width))?;
+                    data_buffer.write_all(&convert_sprite(&bytes, region.clone(), width))?;
                 }
             }
         }
