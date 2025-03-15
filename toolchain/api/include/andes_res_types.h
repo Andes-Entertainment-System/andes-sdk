@@ -26,6 +26,8 @@ struct TileMapResource {
   uint64_t layoutSize;
   uint32_t layoutWidth;
   uint32_t layoutHeight;
+  uint64_t chunkArrAddress;
+  uint64_t chunkArrSize;
   uint32_t chunkWidth;
   uint32_t chunkHeight;
   TileSetResource* tileSet;

@@ -1,3 +1,5 @@
+// this one's a hot mess. have fun
+
 use std::{
     io::{Seek, SeekFrom, Write},
     path::PathBuf,
@@ -8,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tiled::LayerType;
 
-use super::ResCompilerArgs;
+use super::{tileset::ResolvedTileSet, ResCompilerArgs};
 
 #[derive(Serialize, Deserialize)]
 pub struct TileMapDef {
@@ -42,6 +44,7 @@ pub fn compile(
         ref mut data_buffer,
         ref mut source_buffer,
         res_config,
+        resolved,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -67,14 +70,14 @@ pub fn compile(
             .tilesets()
             .first()
             .ok_or(TileMapError::NoTileSets(item.path.clone()))?;
-        let tileset_image_src = match tileset.image.as_ref() {
+        let tileset_res_src = match tileset.image.as_ref() {
             Some(image) => Ok(image.source.clone()),
             None => Err(TileMapError::TilesetNotRegistered(item.path.clone())),
         }?;
-        let tileset_id = res_config
+        let tileset_res_id = res_config
             .tilesets
             .iter()
-            .find(|x| is_same_file(&x.path, &tileset_image_src).unwrap_or(false))
+            .find(|x| is_same_file(&x.path, &tileset_res_src).unwrap_or(false))
             .map_or_else(
                 || Err(TileMapError::TilesetNotRegistered(item.path.clone())),
                 |tileset| Ok(tileset.id.clone()),
@@ -93,7 +96,8 @@ pub fn compile(
             return Err(TileMapError::TileGridAndTileSetDontMatch(item.path.clone()).into());
         }
 
-        let mut chunk_layout: Vec<u16> = vec![0; (tilemap.width * tilemap.height) as usize];
+        // process all (relevant) layers to get layout and objects
+        let mut layout: Vec<u16> = vec![0; (tilemap.width * tilemap.height) as usize];
 
         for layer in tilemap.layers() {
             match layer.layer_type() {
@@ -129,11 +133,11 @@ pub fn compile(
                                         tile.id(),
                                         tile.flip_h,
                                         tile.flip_v,
-                                        &mut chunk_layout[x + y * width],
+                                        &mut layout[x + y * width],
                                     );
                                 }
                                 None => {
-                                    process_tile(0, false, false, &mut chunk_layout[x + y * width]);
+                                    process_tile(0, false, false, &mut layout[x + y * width]);
                                 }
                             };
                         }
@@ -144,23 +148,57 @@ pub fn compile(
             }
         }
 
-        let data_address = data_buffer.seek(SeekFrom::Current(0))?;
+        // write layout into data buffer
+        let layout_address = data_buffer.seek(SeekFrom::Current(0))?;
 
-        for descriptor in chunk_layout {
+        for descriptor in layout {
             data_buffer.write_all(&descriptor.to_le_bytes())?;
         }
 
+        let layout_size = data_buffer.seek(SeekFrom::Current(0))? - layout_address;
+
+        // convert tileset arrangement into chunk arrangement
+        let ResolvedTileSet {
+            arrangement: tileset_arrangement,
+            width: tileset_width,
+            height: tileset_height,
+            ..
+        } = resolved
+            .tilesets
+            .get(&tileset_res_id)
+            .ok_or(TileMapError::TilesetNotRegistered(item.path.clone()))?; // ideally this can't fail
+
+        let chunk_width = (tilemap.tile_width / 8) as usize;
+        let chunk_height = (tilemap.tile_height / 8) as usize;
+
+        let chunk_arr_address = data_buffer.seek(SeekFrom::Current(0))?;
+
+        for ty in (0..*tileset_height).step_by(chunk_height) {
+            for tx in (0..*tileset_width).step_by(chunk_width) {
+                for y in 0..chunk_height {
+                    for x in 0..chunk_width {
+                        let tile_index = tileset_arrangement[tx + x + (ty + y) * tileset_width];
+                        data_buffer.write_all(&tile_index.to_le_bytes())?;
+                    }
+                }
+            }
+        }
+
+        let chunk_arr_size = data_buffer.seek(SeekFrom::Current(0))? - chunk_arr_address;
+
         header_buffer.write_fmt(format_args!("extern TileMapResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "TileMapResource RES_{} = {{ .layoutAddress = {}, .layoutSize = {}, .layoutWidth = {}, .layoutHeight = {}, .chunkWidth = {}, .chunkHeight = {}, .tileSet = &RES_{} }};\n",
+            "TileMapResource RES_{} = {{ .layoutAddress = {}, .layoutSize = {}, .layoutWidth = {}, .layoutHeight = {}, .chunkArrAddress = {}, .chunkArrSize = {}, .chunkWidth = {}, .chunkHeight = {}, .tileSet = &RES_{} }};\n",
             item.id,
-            data_address,
-            data_buffer.seek(SeekFrom::Current(0))? - data_address,
+            layout_address,
+            layout_size,
             tilemap.width,
             tilemap.height,
-            tilemap.tile_width / 8,
-            tilemap.tile_height / 8,
-            tileset_id,
+            chunk_arr_address,
+            chunk_arr_size,
+            chunk_width,
+            chunk_height,
+            tileset_res_id,
         ))?;
     }
 

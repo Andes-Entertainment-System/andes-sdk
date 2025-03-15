@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     env::set_current_dir,
     fs::{self, File},
     io::{BufWriter, Seek, SeekFrom, Write},
@@ -32,6 +33,18 @@ pub struct ResCompilerArgs {
     data_buffer: BufWriter<File>,
     header_buffer: BufWriter<File>,
     source_buffer: BufWriter<File>,
+    resolved: ResolvedResources,
+}
+pub struct ResolvedResources {
+    tilesets: HashMap<String, tileset::ResolvedTileSet>,
+}
+
+impl Default for ResolvedResources {
+    fn default() -> ResolvedResources {
+        ResolvedResources {
+            tilesets: HashMap::new(),
+        }
+    }
 }
 
 fn write_preamble(
@@ -72,7 +85,7 @@ fn write_data_length(
 }
 
 pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
-    set_current_dir(project_path.join("/resources"))?;
+    set_current_dir(project_path.join("resources"))?;
 
     let res_config: ResConfig = serde_yml::from_reader(File::open("config.yml")?)?;
 
@@ -88,6 +101,7 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
         data_buffer: BufWriter::new(data_file),
         header_buffer: BufWriter::new(header_file),
         source_buffer: BufWriter::new(source_file),
+        resolved: ResolvedResources::default(),
     };
 
     write_preamble(&mut compiler_args)?;

@@ -17,12 +17,19 @@ pub struct TileSetDef {
     keep_duplicates: bool,
 }
 
+pub struct ResolvedTileSet {
+    pub arrangement: Vec<u16>,
+    pub width: usize,
+    pub height: usize,
+}
+
 pub fn compile(
     ResCompilerArgs {
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
         res_config,
+        resolved,
         ..
     }: &mut ResCompilerArgs,
 ) -> anyhow::Result<()> {
@@ -37,8 +44,9 @@ pub fn compile(
             ..
         } = utils::load_indexed_image(&item.path)?;
 
-        let mut tiles: Vec<[u8; 64]> = Vec::new();
+        let mut tile_amount = 0;
         let mut tile_hashes: Vec<md5::Digest> = Vec::new();
+        let mut tile_arrangement: Vec<u16> = Vec::new();
 
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
@@ -58,21 +66,38 @@ pub fn compile(
                     if !tile_hashes.contains(&tile_hash) {
                         data_buffer.write_all(&tile)?;
                         tile_hashes.push(tile_hash);
-                        tiles.push(tile);
+                        tile_amount += 1;
+
+                        tile_arrangement.push((tile_hashes.len() - 1) as u16);
+                    } else {
+                        tile_arrangement.push(
+                            tile_hashes
+                                .iter()
+                                .position(|x| *x == tile_hash)
+                                .unwrap_or(0) as u16,
+                        );
                     }
                 } else {
                     data_buffer.write_all(&tile)?;
-                    tiles.push(tile);
                 }
             }
         }
+
+        resolved.tilesets.insert(
+            item.id.clone(),
+            ResolvedTileSet {
+                arrangement: tile_arrangement,
+                width: width / 8,
+                height: height / 8,
+            },
+        );
 
         header_buffer.write_fmt(format_args!("extern TileSetResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
             "TileSetResource RES_{} = {{ .address = {}, .size = {} }};\n",
             item.id,
             data_address,
-            tiles.len() * 64
+            tile_amount * 64,
         ))?;
     }
 
