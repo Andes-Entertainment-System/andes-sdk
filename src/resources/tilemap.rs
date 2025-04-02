@@ -16,6 +16,8 @@ use super::{tileset::ResolvedTileSet, ResCompilerArgs};
 pub struct TileMapDef {
     id: String,
     path: PathBuf,
+    #[serde(default)]
+    layer_prefix: String,
 }
 
 #[derive(Error, Debug)]
@@ -100,6 +102,10 @@ pub fn compile(
         let mut layout: Vec<u16> = vec![0; (tilemap.width * tilemap.height) as usize];
 
         for layer in tilemap.layers() {
+            if !layer.name.starts_with(&item.layer_prefix) {
+                continue;
+            }
+
             match layer.layer_type() {
                 LayerType::Tiles(tiles) => {
                     let width = tiles.width().unwrap_or(tilemap.width) as usize;
@@ -109,7 +115,7 @@ pub fn compile(
                         // high priority layer
                         |id: u32, flip_h: bool, flip_v: bool, chunk: &mut u16| {
                             *chunk = (id & 8191) as u16;
-                            *chunk |= (flip_v as u16) << 13 | (flip_h as u16) << 14 | 1 << 15;
+                            *chunk |= (flip_h as u16) << 13 | (flip_v as u16) << 14 | 1 << 15;
                         }
                     } else if layer.name.ends_with("priority") {
                         // priority layer (changes tile priority according to tile presence, no tile is low and tile is high)
@@ -121,7 +127,7 @@ pub fn compile(
                         // low priority layer
                         |id: u32, flip_h: bool, flip_v: bool, chunk: &mut u16| {
                             *chunk = (id & 8191) as u16;
-                            *chunk |= (flip_v as u16) << 13 | (flip_h as u16) << 14;
+                            *chunk |= (flip_h as u16) << 13 | (flip_v as u16) << 14;
                         }
                     };
 
@@ -188,7 +194,17 @@ pub fn compile(
 
         header_buffer.write_fmt(format_args!("extern TileMapResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
-            "TileMapResource RES_{} = {{ .layoutAddress = {}, .layoutSize = {}, .layoutWidth = {}, .layoutHeight = {}, .chunkArrAddress = {}, .chunkArrSize = {}, .chunkWidth = {}, .chunkHeight = {}, .tileSet = &RES_{} }};\n",
+            "TileMapResource RES_{} = {{
+    .layoutAddress = {},
+    .layoutSize = {},
+    .layoutWidth = {},
+    .layoutHeight = {},
+    .chunkArrAddress = {},
+    .chunkArrSize = {},
+    .chunkWidth = {},
+    .chunkHeight = {},
+    .tileSet = &RES_{}
+}};\n",
             item.id,
             layout_address,
             layout_size,

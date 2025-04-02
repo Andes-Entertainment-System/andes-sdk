@@ -1,4 +1,5 @@
 #pragma once
+
 #include <andes_res_types.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -25,6 +26,11 @@ struct Sprite {
   uint32_t I_prev;
   uint32_t I_next;
 };
+
+/**
+ * Defines a sprite to be used with SPR functions. Struct members prefixed with 'I_' are internals and should not be
+ * tinkered with.
+ */
 typedef struct Sprite Sprite;
 
 void SPR_loadSpriteSet(SpriteSetResource* res);

@@ -8,19 +8,27 @@
   ((tileIndex) | (priority) << 15 | (vFlip) << 14 | (hFlip) << 13)
 
 /**
- * Get the horizontal flip flag from a tile descriptor.
+ * Get the horizontal flip flag of a tile descriptor.
  */
 #define TILE_HFLIP_FLAG(tileDescriptor) ((tileDescriptor) >> 13 & 1)
 
 /**
- * Get the vertical flip flag from a tile descriptor.
+ * Get the vertical flip flag of a tile descriptor.
  */
 #define TILE_VFLIP_FLAG(tileDescriptor) ((tileDescriptor) >> 14 & 1)
 
 /**
- * Get the priority flag from a tile descriptor.
+ * Get the priority flag of a tile descriptor.
  */
 #define TILE_PRIORITY_FLAG(tileDescriptor) ((tileDescriptor) >> 15)
+
+/**
+ * Get the tile index of a tile descriptor.
+ */
+#define TILE_INDEX(tileDescriptor) ((tileDescriptor) & 8191)
+
+#define TILE_PLANE_WIDTH 64
+#define TILE_PLANE_HEIGHT 64
 
 enum TilePlane {
   TILEPLANE_BG,
