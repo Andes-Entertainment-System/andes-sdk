@@ -49,7 +49,19 @@
         "properties": {
           "id": { "type": "string" },
           "path": { "type": "string" },
-          "skip_duplicates": { "type": "boolean" }
+          "keep_duplicates": { "type": "boolean" }
+        },
+        "required": [ "id", "path" ]
+      }
+    },
+    "tilemaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "layer_prefix": { "type": "string" }
         },
         "required": [ "id", "path" ]
       }
