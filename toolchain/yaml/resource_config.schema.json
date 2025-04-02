@@ -61,7 +61,8 @@
         "properties": {
           "id": { "type": "string" },
           "path": { "type": "string" },
-          "layer_prefix": { "type": "string" }
+          "layer_prefix": { "type": "string" },
+          "tileset_offset": { "type": "number" }
         },
         "required": [ "id", "path" ]
       }

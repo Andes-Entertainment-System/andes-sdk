@@ -18,6 +18,8 @@ pub struct TileMapDef {
     path: PathBuf,
     #[serde(default)]
     layer_prefix: String,
+    #[serde(default)]
+    tileset_offset: u16,
 }
 
 #[derive(Error, Debug)]
@@ -183,7 +185,8 @@ pub fn compile(
             for tx in (0..*tileset_width).step_by(chunk_width) {
                 for y in 0..chunk_height {
                     for x in 0..chunk_width {
-                        let tile_index = tileset_arrangement[tx + x + (ty + y) * tileset_width];
+                        let tile_index = tileset_arrangement[tx + x + (ty + y) * tileset_width]
+                            + item.tileset_offset;
                         data_buffer.write_all(&tile_index.to_le_bytes())?;
                     }
                 }
