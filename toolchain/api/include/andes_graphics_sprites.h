@@ -6,10 +6,10 @@
 
 struct Sprite {
   struct {
-    uint32_t dataPtr;
     uint32_t width;
     uint32_t height;
   } I_source;
+  void* I_slotPtr;
   struct SpriteSetResource* set;
   uint32_t frame;
   struct {
@@ -23,8 +23,6 @@ struct Sprite {
     bool vFlip;
   } flags;
   int32_t zIndex;
-  uint32_t I_prev;
-  uint32_t I_next;
 };
 
 /**

@@ -8,6 +8,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+pub mod audio;
 pub mod palette;
 pub mod rawdata;
 pub mod spriteset;
@@ -16,6 +17,8 @@ pub mod tileset;
 
 #[derive(Serialize, Deserialize)]
 pub struct ResConfig {
+    #[serde(default)]
+    audio: Vec<audio::AudioDef>,
     #[serde(default)]
     palettes: Vec<palette::PaletteDef>,
     #[serde(default)]
@@ -106,6 +109,7 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
 
     write_preamble(&mut compiler_args)?;
 
+    audio::compile(&mut compiler_args)?;
     palette::compile(&mut compiler_args)?;
     rawdata::compile(&mut compiler_args)?;
     spriteset::compile(&mut compiler_args)?;

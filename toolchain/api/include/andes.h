@@ -1,5 +1,6 @@
 #pragma once
 
+#include <andes_audio.h>
 #include <andes_graphics.h>
 #include <andes_input.h>
 #include <andes_resources.h>

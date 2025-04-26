@@ -52,11 +52,18 @@ pub fn compile(
 
         for ty in (0..height as usize).step_by(8) {
             for tx in (0..width as usize).step_by(8) {
+                // we need the flipped tiles' hashes to check for flipped tile duplicates
                 let mut tile: [u8; 64] = [0; 64];
+                let mut tile_hflipped: [u8; 64] = [0; 64];
+                let mut tile_vflipped: [u8; 64] = [0; 64];
+                let mut tile_hvflipped: [u8; 64] = [0; 64];
 
                 for y in 0..8 {
                     for x in 0..8 {
                         tile[x + y * 8] = buffer[tx + x + (ty + y) * width];
+                        tile_hflipped[7 - x + y * 8] = buffer[tx + x + (ty + y) * width];
+                        tile_vflipped[x + (7 - y) * 8] = buffer[tx + x + (ty + y) * width];
+                        tile_hvflipped[7 - x + (7 - y) * 8] = buffer[tx + x + (ty + y) * width];
                     }
                 }
 

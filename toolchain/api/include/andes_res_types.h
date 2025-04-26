@@ -49,17 +49,10 @@ struct SpriteSetResource {
 };
 typedef struct SpriteSetResource SpriteSetResource;
 
-struct SoundResource {
+struct AudioResource {
   uint64_t address;
   uint64_t size;
   void* data;
-  uint64_t dataSize;
+  uint32_t dataSize;
 };
-typedef struct SoundResource SoundResource;
-
-struct MusicResource {
-  uint64_t address;
-  uint64_t size;
-  float loopPoint;
-};
-typedef struct MusicResource MusicResource;
+typedef struct AudioResource AudioResource;

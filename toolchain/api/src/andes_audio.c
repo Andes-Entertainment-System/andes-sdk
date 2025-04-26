@@ -1,20 +1,19 @@
 #include <andes_audio.h>
 #include <andes_storage.h>
 
-void SFX_playMusic(struct MusicResource* res) { I_SFX_playMusicFromDisk(res->address, res->size); }
+void SFX_playMusic(struct AudioResource* res) { I_SFX_playMusicFromDisk(res->address, res->size); }
 
-void SFX_playSound(uint8_t channel, struct SoundResource* res) {
+void SFX_playSound(int8_t channel, struct AudioResource* res) {
   I_SFX_playSoundFromBuffer(channel, res->data, res->dataSize);
 }
 
-void SFX_loadSound(struct SoundResource* res) {
+void SFX_loadSound(struct AudioResource* res) {
   if (res->data != NULL) return;
 
-  res->data = malloc(res->size);
-  STO_copyDiskToPtr(res->data, res->address, res->size);
+  res->data = I_SFX_loadSoundFromDisk(res->address, res->size, &res->dataSize);
 }
 
-void SFX_unloadSound(struct SoundResource* res) {
+void SFX_unloadSound(struct AudioResource* res) {
   if (res->data == NULL) return;
 
   free(res->data);
