@@ -32,6 +32,13 @@ extern void SFX_seekMusic(uint64_t position);
  */
 extern void SFX_fadeOutMusic(uint64_t duration);
 
+/**
+ * @brief Set the start position in samples for the looping part of the track that's currently playing. Setting
+ * loopStart to -1 or any other negative number will disable looping. Be aware that loopStart is also set automatically
+ * by SFX_playMusic, using the loop start specified for the track in the resource config file.
+ */
+extern void SFX_setMusicLoopStart(int64_t loopStart);
+
 void SFX_loadSound(AudioResource* res);
 void SFX_unloadSound(AudioResource* res);
 

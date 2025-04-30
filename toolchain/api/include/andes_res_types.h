@@ -54,5 +54,6 @@ struct AudioResource {
   uint64_t size;
   void* data;
   uint32_t dataSize;
+  int64_t loopStart;
 };
 typedef struct AudioResource AudioResource;

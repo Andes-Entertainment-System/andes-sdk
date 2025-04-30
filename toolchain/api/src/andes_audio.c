@@ -1,7 +1,10 @@
 #include <andes_audio.h>
 #include <andes_storage.h>
 
-void SFX_playMusic(struct AudioResource* res) { I_SFX_playMusicFromDisk(res->address, res->size); }
+void SFX_playMusic(struct AudioResource* res) {
+  I_SFX_playMusicFromDisk(res->address, res->size);
+  SFX_setMusicLoopStart(res->loopStart);
+}
 
 void SFX_playSound(int8_t channel, struct AudioResource* res) {
   I_SFX_playSoundFromBuffer(channel, res->data, res->dataSize);
