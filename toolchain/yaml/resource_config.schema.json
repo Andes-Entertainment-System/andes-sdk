@@ -5,6 +5,18 @@
   "description": "Schema for the Andes SDK resource configuration file.",
   "type": "object",
   "properties": {
+    "audio": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string" },
+          "loop_start": { "type": "number" }
+        },
+        "required": [ "id", "path" ]
+      }
+    },
     "palettes": {
       "type": "array",
       "items": {
