@@ -16,6 +16,7 @@ pub struct RawDataDef {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
@@ -28,7 +29,7 @@ pub fn compile(
 
     for item in res_config.rawdata.iter() {
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
-        data_buffer.write_all(&fs::read(&item.path)?)?;
+        data_buffer.write_all(&fs::read(resources_path.join(&item.path))?)?;
         header_buffer.write_fmt(format_args!("extern RawDataResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
             "RawDataResource RES_{} = {{ .address = {}, .size = {} }};\n",

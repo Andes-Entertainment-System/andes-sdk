@@ -44,6 +44,7 @@ pub enum TileMapError {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
@@ -59,7 +60,7 @@ pub fn compile(
         let mut tiled_loader = tiled::Loader::new();
         let tilemap = match item.path.extension() {
             Some(os_str) => match os_str.to_str() {
-                Some("tmx") => Ok(tiled_loader.load_tmx_map(&item.path)?),
+                Some("tmx") => Ok(tiled_loader.load_tmx_map(resources_path.join(&item.path))?),
                 _ => Err(TileMapError::InvalidFileExtension(item.path.clone())),
             },
             None => Err(TileMapError::InvalidFileExtension(item.path.clone())),
@@ -81,7 +82,7 @@ pub fn compile(
         let tileset_res_id = res_config
             .tilesets
             .iter()
-            .find(|x| is_same_file(&x.path, &tileset_res_src).unwrap_or(false))
+            .find(|x| is_same_file(resources_path.join(&x.path), &tileset_res_src).unwrap_or(false))
             .map_or_else(
                 || Err(TileMapError::TilesetNotRegistered(item.path.clone())),
                 |tileset| Ok(tileset.id.clone()),

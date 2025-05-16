@@ -1,23 +1,31 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use clap::{arg, Command};
 use std::{
     env,
-    fs::File,
+    fs::{self, File},
     io::{self, Read},
     path::Path,
-    process, time,
-    time::Instant,
+    process,
+    time::{self, Instant},
 };
 
 pub mod resources;
 pub mod utils;
 
-fn build(project_path: &Path) -> anyhow::Result<()> {
+fn build(project_path: &Path, target: &String) -> anyhow::Result<()> {
     resources::compile_all(project_path)?;
 
+    let build_residual_dir = &project_path.join(".build-residual");
+    if !fs::exists(build_residual_dir)? {
+        fs::create_dir(build_residual_dir)?;
+    }
+
+    // set up cmake
     let cmd = process::Command::new("cmake")
-        .current_dir(project_path)
-        .arg(".")
+        .current_dir(build_residual_dir)
+        .arg("..")
+        .arg(format!("-DTARGET={}", target))
+        .arg("-GNinja")
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
         .spawn()?;
@@ -26,8 +34,11 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         return Err(anyhow!("CMake configuration failed"));
     }
 
-    let cmd = process::Command::new("make")
-        .current_dir(project_path)
+    // build app
+    let cmd = process::Command::new("cmake")
+        .current_dir(build_residual_dir)
+        .arg("--build")
+        .arg(".")
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
         .spawn()?;
@@ -35,6 +46,13 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     if !cmd.wait_with_output()?.status.success() {
         return Err(anyhow!("App build failed"));
     }
+
+    // copy app file to build folder
+    fs::copy(
+        build_residual_dir.join("app.bin"),
+        project_path.join("build/app.bin"),
+    )
+    .context("Failed to copy app binary file to build folder")?;
 
     let mut out_file = File::create(project_path.join("build/out.bin"))?;
 
@@ -71,11 +89,10 @@ fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(
-            Command::new("build")
-                .about("placeholder")
-                .arg(arg!([DIRECTORY])),
-        )
+        .subcommand(Command::new("build").about("placeholder").args(&[
+            arg!([DIRECTORY]),
+            arg!(-t --target <TARGET>).default_value("wasm"),
+        ]))
         .subcommand(
             Command::new("sideload")
                 .about("placeholder")
@@ -87,16 +104,19 @@ fn main() {
 
     match matches.subcommand() {
         Some(("build", sub_matches)) => {
-            let default_path = env::current_dir().unwrap_or(Path::new("").to_path_buf());
-            let project_path_str: Option<&String> = sub_matches.get_one("DIRECTORY");
+            let project_path = match sub_matches.get_one::<String>("DIRECTORY") {
+                Some(x) => Path::new(x),
+                None => &env::current_dir().unwrap(),
+            };
+            let target: &String = match sub_matches.get_one::<String>("target") {
+                Some(x) => x,
+                None => &String::from("wasm"),
+            };
 
-            let result: anyhow::Result<()>;
+            println!("{}", target);
+
             let start_time = Instant::now();
-
-            match project_path_str {
-                Some(x) => result = build(&Path::new(x)),
-                None => result = build(&default_path),
-            }
+            let result = build(project_path, target);
 
             match result {
                 Err(x) => println!("BUILD ABORTED: {}", x),

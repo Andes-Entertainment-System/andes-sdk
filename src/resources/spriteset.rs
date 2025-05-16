@@ -94,6 +94,7 @@ fn convert_sprite(bytes: &[u8], region: Rect, image_width: usize) -> Vec<u8> {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
@@ -110,7 +111,7 @@ pub fn compile(
             width,
             height,
             ..
-        } = utils::load_indexed_image(&item.path)?;
+        } = utils::load_indexed_image(&resources_path.join(&item.path))?;
 
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
 
@@ -124,7 +125,7 @@ pub fn compile(
         ))?;
 
         let settings = match &item.settings_path {
-            Some(path) => &serde_yml::from_reader(File::open(path)?).unwrap(),
+            Some(path) => &serde_yml::from_reader(File::open(resources_path.join(&path))?).unwrap(),
             None => &item.settings,
         };
 

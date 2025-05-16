@@ -13,6 +13,7 @@ pub struct PaletteDef {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut source_buffer,
         res_config,
@@ -23,7 +24,7 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- palettes ----\n")?;
 
     for item in res_config.palettes.iter() {
-        let content = fs::read_to_string(&item.path)?;
+        let content = fs::read_to_string(resources_path.join(&item.path))?;
         let content_lines = content.split('\n');
 
         let mut color_amount = 0;

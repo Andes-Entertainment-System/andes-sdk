@@ -22,6 +22,7 @@ fn loop_start_default() -> i64 {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
@@ -34,7 +35,7 @@ pub fn compile(
 
     for item in res_config.audio.iter() {
         let data_address = data_buffer.seek(SeekFrom::Current(0))?;
-        data_buffer.write_all(&fs::read(&item.path)?)?;
+        data_buffer.write_all(&fs::read(resources_path.join(&item.path))?)?;
         header_buffer.write_fmt(format_args!("extern AudioResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(
             "AudioResource RES_{} = {{ .address = {}, .size = {}, .loopStart = {} }};\n",

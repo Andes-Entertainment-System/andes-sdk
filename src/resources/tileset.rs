@@ -25,6 +25,7 @@ pub struct ResolvedTileSet {
 
 pub fn compile(
     ResCompilerArgs {
+        resources_path,
         ref mut header_buffer,
         ref mut data_buffer,
         ref mut source_buffer,
@@ -42,7 +43,7 @@ pub fn compile(
             width,
             height,
             ..
-        } = utils::load_indexed_image(&item.path)?;
+        } = utils::load_indexed_image(&resources_path.join(&item.path))?;
 
         let mut tile_amount = 0;
         let mut tile_hashes: Vec<md5::Digest> = Vec::new();

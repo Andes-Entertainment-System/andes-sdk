@@ -17,17 +17,9 @@ set (CMAKE_EXE_LINKER_FLAGS
      -fno-exceptions"
 )
 
-file(GLOB PROJECT_SOURCES src/*)
-set(PROJECT_SOURCES ${PROJECT_SOURCES} resources/andes_resources.c)
-
 file(GLOB API_SOURCES ${CMAKE_CURRENT_LIST_DIR}/../api/src/*)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../api/include)
 
-include_directories(include)
 include_directories(resources)
 
-add_executable(app.bin ${PROJECT_SOURCES} ${API_SOURCES})
-set_target_properties(app.bin
-    PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/build"
-)
+add_executable(app.bin ${API_SOURCES} resources/andes_resources.c)

@@ -1,9 +1,8 @@
 use std::{
     collections::HashMap,
-    env::set_current_dir,
     fs::{self, File},
     io::{BufWriter, Seek, SeekFrom, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
@@ -32,6 +31,7 @@ pub struct ResConfig {
 }
 
 pub struct ResCompilerArgs {
+    resources_path: PathBuf,
     res_config: ResConfig,
     data_buffer: BufWriter<File>,
     header_buffer: BufWriter<File>,
@@ -88,9 +88,10 @@ fn write_data_length(
 }
 
 pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
-    set_current_dir(project_path.join("resources"))?;
+    let resources_path = project_path.join("resources");
 
-    let res_config: ResConfig = serde_yml::from_reader(File::open("config.yml")?)?;
+    let res_config: ResConfig =
+        serde_yml::from_reader(File::open(resources_path.join("config.yml"))?)?;
 
     let _ = fs::create_dir(project_path.join("build"));
 
@@ -100,7 +101,8 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
     let source_file = fs::File::create("andes_resources.c")?;
 
     let mut compiler_args = ResCompilerArgs {
-        res_config: res_config,
+        resources_path,
+        res_config,
         data_buffer: BufWriter::new(data_file),
         header_buffer: BufWriter::new(header_file),
         source_buffer: BufWriter::new(source_file),
