@@ -1,25 +1,19 @@
-if (NOT DEFINED WASI_SDK_DIR)
-    set (WASI_SDK_DIR               "/opt/wasi-sdk")
+if (NOT DEFINED PROJECT_SOURCES)
+  message (FATAL_ERROR "PROJECT_SOURCES is not defined! Project source files must be specified in the \
+PROJECT_SOURCES variable.")
 endif ()
 
-set (CMAKE_TOOLCHAIN_FILE $ENV{WASI_SDK_DIR}/share/cmake/wasi-sdk.cmake)
-set (CMAKE_SYSROOT $ENV{WASI_SDK_DIR}/share/wasi-sysroot)
+file (GLOB API_SOURCES ${CMAKE_CURRENT_LIST_DIR}/../api/src/*)
+include_directories (${CMAKE_CURRENT_LIST_DIR}/../api/include)
 
-set (CMAKE_CXX_FLAGS "-O2")
+include_directories (resources)
 
-set (CMAKE_EXE_LINKER_FLAGS
-    "-nostdlib -Wl,--max-memory=3145728 -z stack-size=524288   \
-     -Wl,--no-entry -Wl,--strip-all \
-     -Wl,--export=I_setup                \
-     -Wl,--export=I_process                \
-     -Wl,--export=__heap_base -Wl,--export=__data_end -Wl,--export=malloc -Wl,--export=free \
-     -Wl,--allow-undefined   \
-     -fno-exceptions"
-)
+add_executable (app.bin ${API_SOURCES} ${PROJECT_SOURCES} resources/andes_resources.c)
 
-file(GLOB API_SOURCES ${CMAKE_CURRENT_LIST_DIR}/../api/src/*)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/../api/include)
-
-include_directories(resources)
-
-add_executable(app.bin ${API_SOURCES} resources/andes_resources.c)
+if (${TARGET} STREQUAL "wasm")
+  include(${CMAKE_CURRENT_LIST_DIR}/target-wasm.cmake)
+elseif (${TARGET} STREQUAL "esp32s3")
+  include(${CMAKE_CURRENT_LIST_DIR}/target-xtensa.cmake)
+else ()
+  message(WARNING "Unknown target. The app will still compile, but it may not run in any officially supported platform.")
+endif ()
