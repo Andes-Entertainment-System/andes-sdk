@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 struct PaletteResource {
@@ -18,6 +19,7 @@ typedef struct RawDataResource RawDataResource;
 struct TileSetResource {
   uint64_t address;
   uint64_t size;
+  uint16_t* planeArrangement;
 };
 typedef struct TileSetResource TileSetResource;
 

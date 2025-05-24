@@ -61,7 +61,9 @@
         "properties": {
           "id": { "type": "string" },
           "path": { "type": "string" },
-          "keep_duplicates": { "type": "boolean" }
+          "keep_duplicates": { "type": "boolean" },
+          "export_plane_arrangement": { "type": "boolean" },
+          "plane_arrangement_offset": { "type": "number" }
         },
         "required": [ "id", "path" ]
       }

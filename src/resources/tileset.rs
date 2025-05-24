@@ -15,6 +15,10 @@ pub struct TileSetDef {
     pub path: PathBuf,
     #[serde(default)]
     keep_duplicates: bool,
+    #[serde(default)]
+    export_plane_arrangement: bool,
+    #[serde(default)]
+    plane_arrangement_offset: usize,
 }
 
 pub struct ResolvedTileSet {
@@ -75,17 +79,24 @@ pub fn compile(
                     tile_hashes.push(tile_hash);
                     tile_amount += 1;
 
-                    tile_arrangement.push((tile_hashes.len() - 1) as u16);
+                    tile_arrangement
+                        .push((tile_hashes.len() - 1 + item.plane_arrangement_offset) as u16);
                 } else {
                     tile_arrangement.push(
-                        tile_hashes
+                        (tile_hashes
                             .iter()
                             .position(|x| *x == tile_hash)
-                            .unwrap_or(0) as u16,
+                            .unwrap_or(0)
+                            + item.plane_arrangement_offset) as u16,
                     );
                 }
             }
         }
+
+        let stringified_arrangement = tile_arrangement
+            .iter()
+            .map(|x| x.to_string() + ", ")
+            .collect::<String>();
 
         resolved.tilesets.insert(
             item.id.clone(),
@@ -97,12 +108,27 @@ pub fn compile(
         );
 
         header_buffer.write_fmt(format_args!("extern TileSetResource RES_{};\n", item.id))?;
-        source_buffer.write_fmt(format_args!(
-            "TileSetResource RES_{} = {{ .address = {}, .size = {} }};\n",
-            item.id,
-            data_address,
-            tile_amount * 64,
-        ))?;
+
+        if item.export_plane_arrangement {
+            source_buffer.write_fmt(format_args!(
+                "uint16_t ARRANGE_{}[] = {{ {} }};\n",
+                item.id, stringified_arrangement
+            ))?;
+            source_buffer.write_fmt(format_args!(
+                "TileSetResource RES_{} = {{ .address = {}, .size = {}, .planeArrangement = ARRANGE_{} }};\n",
+                item.id,
+                data_address,
+                tile_amount * 64,
+                item.id
+            ))?;
+        } else {
+            source_buffer.write_fmt(format_args!(
+                "TileSetResource RES_{} = {{ .address = {}, .size = {}, .planeArrangement = NULL }};\n",
+                item.id,
+                data_address,
+                tile_amount * 64,
+            ))?;
+        }
     }
 
     Ok(())
