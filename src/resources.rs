@@ -97,8 +97,8 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
 
     let data_file = fs::File::create(project_path.join("build/resources.bin"))?;
 
-    let header_file = fs::File::create("andes_resources.h")?;
-    let source_file = fs::File::create("andes_resources.c")?;
+    let header_file = fs::File::create(resources_path.join("andes_resources.h"))?;
+    let source_file = fs::File::create(resources_path.join("andes_resources.c"))?;
 
     let mut compiler_args = ResCompilerArgs {
         resources_path,
