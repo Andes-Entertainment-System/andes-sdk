@@ -188,7 +188,11 @@ fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(Command::new("clean").about("placeholder"))
+        .subcommand(
+            Command::new("clean")
+                .about("placeholder")
+                .arg(arg!([DIRECTORY])),
+        )
         .subcommand(
             Command::new("set-target")
                 .about("placeholder")
