@@ -49,7 +49,13 @@ fn timed_task<F: Fn() -> anyhow::Result<()>>(task: F, name: &str) {
     let start_time = Instant::now();
 
     match task() {
-        Err(x) => println!("{} ABORTED: {}", name, x),
+        Err(x) => {
+            if env::var("RUST_BACKTRACE").is_ok() {
+                println!("{} ABORTED: {}\n{}", name, x, x.backtrace());
+            } else {
+                println!("{} ABORTED: {}", name, x);
+            }
+        }
         Ok(_) => println!(
             "{} SUCCESSFUL: took {} seconds",
             name,
