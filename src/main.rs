@@ -34,6 +34,10 @@ it with the Visual Studio Code ESP-IDF extension and you're currently using VSCo
 a terminal under the ESP-IDF environment by opening the Command Prompt (F1) and looking for \"Open ESP-IDF Terminal\". 
 Otherwise, you may look at the Installation page in the ESP-IDF docs for further instructions.")]
     EspIdfNotFound,
+    #[error(
+        "No target has been set for this project. Make sure to run `andk set-target {{TARGET}}`"
+    )]
+    NoTargetSet,
     #[error("\"{0}\" is not a valid build target")]
     InvalidTarget(String),
 }
@@ -129,7 +133,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
 
     let build_residual_dir = &project_path.join(".build-residual");
     if !fs::exists(build_residual_dir)? {
-        fs::create_dir(build_residual_dir)?;
+        return Err(BuildError::NoTargetSet.into());
     }
 
     // set up cmake
