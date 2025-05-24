@@ -1,16 +1,15 @@
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use clap::{arg, Command};
 use std::{
     env,
     fs::{self, File},
-    io::{self, Read},
+    io,
     path::{Path, PathBuf},
     process,
     str::FromStr,
-    time::{self, Instant},
+    time::Instant,
 };
 use thiserror::Error;
-
 pub mod resources;
 pub mod utils;
 
@@ -38,8 +37,12 @@ Otherwise, you may look at the Installation page in the ESP-IDF docs for further
         "No target has been set for this project. Make sure to run `andk set-target {{TARGET}}`"
     )]
     NoTargetSet,
-    #[error("\"{0}\" is not a valid build target")]
-    InvalidTarget(String),
+    #[error("The specified target is not a valid build target. Valid build targets: wasm, xtensa")]
+    InvalidTarget,
+    #[error("CMake configuration failed")]
+    CMakeConfigFailed,
+    #[error("App make failed")]
+    MakeFailed,
 }
 
 fn timed_task<F: Fn() -> anyhow::Result<()>>(task: F, name: &str) {
@@ -93,7 +96,7 @@ fn get_target_args(target: BuildTarget) -> anyhow::Result<Vec<String>> {
                     .to_string_lossy()
             )])
         }
-        _ => Ok(vec![]),
+        _ => Err(BuildError::InvalidTarget.into()),
     };
 }
 
@@ -122,7 +125,7 @@ fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
         .spawn()?;
 
     if !cmd.wait_with_output()?.status.success() {
-        return Err(anyhow!("CMake configuration failed"));
+        return Err(BuildError::CMakeConfigFailed.into());
     }
 
     Ok(())
@@ -145,7 +148,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         .spawn()?;
 
     if !cmd.wait_with_output()?.status.success() {
-        return Err(anyhow!("CMake configuration failed"));
+        return Err(BuildError::CMakeConfigFailed.into());
     }
 
     // build app
@@ -156,7 +159,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         .spawn()?;
 
     if !cmd.wait_with_output()?.status.success() {
-        return Err(anyhow!("App build failed"));
+        return Err(BuildError::MakeFailed.into());
     }
 
     // copy app file to build folder
@@ -166,6 +169,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     )
     .context("Failed to copy app binary file to build folder")?;
 
+    // merge resources.bin and app.bin into out.bin
     let mut out_file = File::create(project_path.join("build/out.bin"))?;
 
     io::copy(
