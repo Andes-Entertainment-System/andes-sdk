@@ -210,12 +210,6 @@ fn main() {
                 .arg(arg!([DIRECTORY]))
                 .arg(arg!(-t --target <TARGET>).default_value("wasm")),
         )
-        .subcommand(
-            Command::new("sideload")
-                .about("placeholder")
-                .arg(arg!([FILE]))
-                .arg(arg!([PORT])),
-        )
         .subcommand(Command::new("new").about("placeholder"));
     let matches = command.get_matches();
 
@@ -248,26 +242,6 @@ fn main() {
             };
 
             timed_task(|| build(project_path), "BUILD");
-        }
-        Some(("sideload", sub_matches)) => {
-            let default_path = env::current_dir().unwrap_or(Path::new("").to_path_buf());
-            let file_path_str: Option<&String> = sub_matches.get_one("FILE");
-
-            let result: anyhow::Result<()>;
-            let start_time = Instant::now();
-
-            match file_path_str {
-                Some(x) => result = sideload(&Path::new(x)),
-                None => result = sideload(&default_path.join("build/out.bin")),
-            }
-
-            match result {
-                Err(x) => println!("SIDELOAD ABORTED: {}", x),
-                Ok(_) => println!(
-                    "SIDELOAD SUCCESSFUL: took {} seconds",
-                    start_time.elapsed().as_millis() as f64 / 1000.0
-                ),
-            }
         }
         _ => unreachable!(),
     }
