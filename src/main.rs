@@ -4,15 +4,127 @@ use std::{
     env,
     fs::{self, File},
     io::{self, Read},
-    path::Path,
+    path::{Path, PathBuf},
     process,
+    str::FromStr,
     time::{self, Instant},
 };
+use thiserror::Error;
 
 pub mod resources;
 pub mod utils;
 
-fn build(project_path: &Path, target: &String) -> anyhow::Result<()> {
+#[derive(Clone, Copy, strum_macros::Display, strum_macros::EnumString)]
+pub enum BuildTarget {
+    Invalid,
+    #[strum(ascii_case_insensitive)]
+    Wasm,
+    #[strum(ascii_case_insensitive)]
+    Xtensa,
+}
+
+#[derive(Error, Debug)]
+pub enum BuildError {
+    #[error("The ANDES_SDK_DIR environment variable is not defined")]
+    AndesSdkDirNotDefined,
+    #[error("Cannot find wasi-sdk. Make sure the WASI_SDK_DIR environment variable points to its directory.")]
+    WasiSdkNotFound,
+    #[error("Cannot find ESP-IDF. Make sure you're building under an ESP-IDF environment. If you installed 
+it with the Visual Studio Code ESP-IDF extension and you're currently using VSCode to build your project, you can open 
+a terminal under the ESP-IDF environment by opening the Command Prompt (F1) and looking for \"Open ESP-IDF Terminal\". 
+Otherwise, you may look at the Installation page in the ESP-IDF docs for further instructions.")]
+    EspIdfNotFound,
+    #[error("\"{0}\" is not a valid build target")]
+    InvalidTarget(String),
+}
+
+fn timed_task<F: Fn() -> anyhow::Result<()>>(task: F, name: &str) {
+    let start_time = Instant::now();
+
+    match task() {
+        Err(x) => println!("{} ABORTED: {}", name, x),
+        Ok(_) => println!(
+            "{} SUCCESSFUL: took {} seconds",
+            name,
+            start_time.elapsed().as_millis() as f64 / 1000.0
+        ),
+    }
+}
+
+fn get_target_args(target: BuildTarget) -> anyhow::Result<Vec<String>> {
+    return match target {
+        BuildTarget::Wasm => {
+            let wasi_sdk_path = match env::var("WASI_SDK_DIR") {
+                Ok(x) => Ok(PathBuf::from(x)),
+                Err(_) => Err(BuildError::WasiSdkNotFound),
+            }?;
+            println!(
+                "-DCMAKE_TOOLCHAIN_FILE={}",
+                wasi_sdk_path
+                    .join("share/cmake/wasi-sdk.cmake")
+                    .to_string_lossy()
+            );
+            Ok(vec![
+                format!(
+                    "-DCMAKE_TOOLCHAIN_FILE={}",
+                    wasi_sdk_path
+                        .join("share/cmake/wasi-sdk.cmake")
+                        .to_string_lossy()
+                ),
+                format!(
+                    "-DCMAKE_SYSROOT={}",
+                    wasi_sdk_path.join("share/wasi-sysroot").to_string_lossy()
+                ),
+            ])
+        }
+        BuildTarget::Xtensa => {
+            let idf_path = match env::var("IDF_PATH") {
+                Ok(x) => Ok(PathBuf::from(x)),
+                Err(_) => Err(BuildError::EspIdfNotFound),
+            }?;
+            Ok(vec![format!(
+                "-DCMAKE_TOOLCHAIN_FILE={}",
+                idf_path
+                    .join("tools/cmake/toolchain-esp32s3.cmake")
+                    .to_string_lossy()
+            )])
+        }
+        _ => Ok(vec![]),
+    };
+}
+
+fn clean(project_path: &Path) -> anyhow::Result<()> {
+    let build_residual_dir = &project_path.join(".build-residual");
+    if fs::exists(build_residual_dir)? {
+        fs::remove_dir_all(build_residual_dir)?;
+    }
+
+    Ok(())
+}
+
+fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
+    clean(project_path)?;
+
+    let build_residual_dir = &project_path.join(".build-residual");
+    fs::create_dir(build_residual_dir)?;
+
+    let cmd = process::Command::new("cmake")
+        .current_dir(build_residual_dir)
+        .arg("..")
+        .arg(format!("-DTARGET={}", target))
+        .args(get_target_args(target)?)
+        .stdout(process::Stdio::inherit())
+        .stderr(process::Stdio::inherit())
+        .spawn()?;
+
+    if !cmd.wait_with_output()?.status.success() {
+        return Err(anyhow!("CMake configuration failed"));
+    }
+
+    Ok(())
+}
+
+fn build(project_path: &Path) -> anyhow::Result<()> {
     resources::compile_all(project_path)?;
 
     let build_residual_dir = &project_path.join(".build-residual");
@@ -24,8 +136,6 @@ fn build(project_path: &Path, target: &String) -> anyhow::Result<()> {
     let cmd = process::Command::new("cmake")
         .current_dir(build_residual_dir)
         .arg("..")
-        .arg(format!("-DTARGET={}", target))
-        .arg("-GNinja")
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
         .spawn()?;
@@ -35,10 +145,8 @@ fn build(project_path: &Path, target: &String) -> anyhow::Result<()> {
     }
 
     // build app
-    let cmd = process::Command::new("cmake")
+    let cmd = process::Command::new("make")
         .current_dir(build_residual_dir)
-        .arg("--build")
-        .arg(".")
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
         .spawn()?;
@@ -89,10 +197,19 @@ fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(Command::new("build").about("placeholder").args(&[
-            arg!([DIRECTORY]),
-            arg!(-t --target <TARGET>).default_value("wasm"),
-        ]))
+        .subcommand(Command::new("clean").about("placeholder"))
+        .subcommand(
+            Command::new("set-target")
+                .about("placeholder")
+                .arg(arg!([TARGET]))
+                .arg(arg!([DIRECTORY])),
+        )
+        .subcommand(
+            Command::new("build")
+                .about("placeholder")
+                .arg(arg!([DIRECTORY]))
+                .arg(arg!(-t --target <TARGET>).default_value("wasm")),
+        )
         .subcommand(
             Command::new("sideload")
                 .about("placeholder")
@@ -103,28 +220,34 @@ fn main() {
     let matches = command.get_matches();
 
     match matches.subcommand() {
+        Some(("clean", sub_matches)) => {
+            let project_path = match sub_matches.get_one::<String>("DIRECTORY") {
+                Some(x) => Path::new(x),
+                None => &env::current_dir().unwrap(),
+            };
+
+            timed_task(|| clean(project_path), "CLEAN");
+        }
+        Some(("set-target", sub_matches)) => {
+            let project_path = match sub_matches.get_one::<String>("DIRECTORY") {
+                Some(x) => Path::new(x),
+                None => &env::current_dir().unwrap(),
+            };
+            let target_str: &String = match sub_matches.get_one::<String>("TARGET") {
+                Some(x) => x,
+                None => &String::from("wasm"),
+            };
+            let target = BuildTarget::from_str(target_str).unwrap_or(BuildTarget::Invalid);
+
+            timed_task(|| set_target(project_path, target), "SET_TARGET");
+        }
         Some(("build", sub_matches)) => {
             let project_path = match sub_matches.get_one::<String>("DIRECTORY") {
                 Some(x) => Path::new(x),
                 None => &env::current_dir().unwrap(),
             };
-            let target: &String = match sub_matches.get_one::<String>("target") {
-                Some(x) => x,
-                None => &String::from("wasm"),
-            };
 
-            println!("{}", target);
-
-            let start_time = Instant::now();
-            let result = build(project_path, target);
-
-            match result {
-                Err(x) => println!("BUILD ABORTED: {}", x),
-                Ok(_) => println!(
-                    "BUILD SUCCESSFUL: took {} seconds",
-                    start_time.elapsed().as_millis() as f64 / 1000.0
-                ),
-            }
+            timed_task(|| build(project_path), "BUILD");
         }
         Some(("sideload", sub_matches)) => {
             let default_path = env::current_dir().unwrap_or(Path::new("").to_path_buf());
