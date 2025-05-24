@@ -68,25 +68,21 @@ pub fn compile(
                     }
                 }
 
-                if !item.keep_duplicates {
-                    let tile_hash = md5::compute(tile);
+                let tile_hash = md5::compute(tile);
 
-                    if !tile_hashes.contains(&tile_hash) {
-                        data_buffer.write_all(&tile)?;
-                        tile_hashes.push(tile_hash);
-                        tile_amount += 1;
-
-                        tile_arrangement.push((tile_hashes.len() - 1) as u16);
-                    } else {
-                        tile_arrangement.push(
-                            tile_hashes
-                                .iter()
-                                .position(|x| *x == tile_hash)
-                                .unwrap_or(0) as u16,
-                        );
-                    }
-                } else {
+                if !tile_hashes.contains(&tile_hash) || item.keep_duplicates {
                     data_buffer.write_all(&tile)?;
+                    tile_hashes.push(tile_hash);
+                    tile_amount += 1;
+
+                    tile_arrangement.push((tile_hashes.len() - 1) as u16);
+                } else {
+                    tile_arrangement.push(
+                        tile_hashes
+                            .iter()
+                            .position(|x| *x == tile_hash)
+                            .unwrap_or(0) as u16,
+                    );
                 }
             }
         }
