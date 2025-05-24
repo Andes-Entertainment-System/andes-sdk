@@ -176,23 +176,6 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn sideload(file_path: &Path) -> anyhow::Result<()> {
-    let mut port = serialport::new("/dev/ttyUSB0", 230400)
-        .timeout(time::Duration::from_millis(10))
-        .dtr_on_open(true)
-        .preserve_dtr_on_open()
-        .open()?;
-
-    let mut app_file = File::open(file_path)?;
-    let mut data: Vec<u8> = vec![0; app_file.metadata()?.len() as usize];
-    app_file.read(&mut data)?;
-
-    port.write(&(data.len() as u32).to_le_bytes())?; // file size
-    port.write(&data)?; // the actual file
-
-    Ok(())
-}
-
 fn main() {
     let command = Command::new("andk")
         .subcommand_required(true)
