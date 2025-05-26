@@ -16,6 +16,8 @@ void SPR_unloadSpriteSet(struct SpriteSetResource* res) {
 }
 
 void SPR_updateSpriteFrame(struct Sprite* sprite) {
+  if (sprite->set == NULL) return;
+
   const struct SpriteSetFrame* frame = &sprite->set->frames[sprite->frame];
   I_SPR_setSpriteDataPtr(sprite, sprite->set->data + frame->offset);
   sprite->I_source.width = frame->width;
