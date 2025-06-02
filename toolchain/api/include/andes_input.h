@@ -1,7 +1,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-enum InputDeviceType { DISCONNECTED, UNKNOWN, DUALSHOCK_4 };
+#define JOY_MAX_GAMEPADS 2
+
+enum InputDeviceType { DISCONNECTED, UNKNOWN, DUALSHOCK_3, DUALSHOCK_4 };
 typedef enum InputDeviceType InputDeviceType;
 
 struct InputDevice {
