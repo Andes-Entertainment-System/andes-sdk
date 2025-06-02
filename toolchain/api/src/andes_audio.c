@@ -11,13 +11,13 @@ void SFX_playSound(int8_t channel, struct AudioResource* res) {
 }
 
 void SFX_loadSound(struct AudioResource* res) {
-  if (res->data != NULL) return;
+  if (res == NULL || res->data != NULL) return;
 
   res->data = I_SFX_loadSoundFromDisk(res->address, res->size, &res->dataSize);
 }
 
 void SFX_unloadSound(struct AudioResource* res) {
-  if (res->data == NULL) return;
+  if (res == NULL || res->data == NULL) return;
 
   free(res->data);
   res->data = NULL;
