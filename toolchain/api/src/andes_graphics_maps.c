@@ -12,6 +12,18 @@
 #define SCREEN_WIDTH_TILES_PADDED (GFX_SCREEN_WIDTH_TILES + 1)
 #define SCREEN_HEIGHT_TILES_PADDED (GFX_SCREEN_HEIGHT_TILES + 1)
 
+static uint32_t getBitIndex(uint32_t bit) {
+  uint32_t index;
+
+  bit >>= 1;
+  while (bit != 0) {
+    bit >>= 1;
+    index++;
+  }
+
+  return index;
+}
+
 void MAP_loadTileMap(TileMap* map, TileMapResource* res, TilePlane plane) {
   map->res = res;
   map->plane = plane;
@@ -23,10 +35,10 @@ void MAP_loadTileMap(TileMap* map, TileMapResource* res, TilePlane plane) {
 
   map->chunkWidth = map->res->chunkWidth;
   map->chunkWidthBitRange = map->chunkWidth - 1;
-  map->chunkWidthBitIndex = sqrt(map->chunkWidth);
+  map->chunkWidthBitIndex = getBitIndex(map->chunkWidth);
   map->chunkHeight = map->res->chunkHeight;
   map->chunkHeightBitRange = map->chunkHeight - 1;
-  map->chunkHeightBitIndex = sqrt(map->chunkHeight);
+  map->chunkHeightBitIndex = getBitIndex(map->chunkHeight);
 
   STO_copyDiskToPtr(map->layout, res->layoutAddress, res->layoutSize);
   STO_copyDiskToPtr(map->chunkArr, res->chunkArrAddress, res->chunkArrSize);
