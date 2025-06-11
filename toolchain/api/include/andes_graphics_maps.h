@@ -58,5 +58,6 @@ typedef struct TileMap TileMap;
 
 void MAP_loadTileMap(TileMap* map, TileMapResource* res, TilePlane plane);
 void MAP_unloadTileMap(TileMap* map);
-uint16_t MAP_chunkAt(TileMap* map, uint32_t x, uint32_t y);
+uint16_t MAP_chunkAtTile(TileMap* map, uint32_t x, uint32_t y);
+uint16_t MAP_chunkAtPixel(TileMap* map, uint32_t x, uint32_t y);
 void MAP_scrollTo(TileMap* map, uint32_t x, uint32_t y);

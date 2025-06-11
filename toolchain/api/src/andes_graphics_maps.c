@@ -52,8 +52,12 @@ void MAP_unloadTileMap(TileMap* map) {
   map->chunkArr = NULL;
 }
 
-uint16_t MAP_chunkAt(TileMap* map, uint32_t x, uint32_t y) {
+uint16_t MAP_chunkAtTile(TileMap* map, uint32_t x, uint32_t y) {
   return map->layout[(x >> map->chunkWidthBitIndex) + (y >> map->chunkHeightBitIndex) * map->res->layoutWidth];
+}
+
+uint16_t MAP_chunkAtPixel(TileMap* map, uint32_t x, uint32_t y) {
+  return MAP_chunkAtTile(map, x / 8, y / 8);
 }
 
 void I_MAP_loadTiles(TileMap* map, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
