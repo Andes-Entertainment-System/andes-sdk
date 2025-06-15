@@ -68,3 +68,19 @@ extern void TIL_setPlaneRow(TilePlane plane, uint32_t x, uint32_t y, uint16_t* t
  *        `height`), going left-to-right and top-to-bottom.
  */
 extern void TIL_setPlaneRect(TilePlane plane, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t* tiles);
+
+/**
+ * @brief In the specified tile plane, starting from the tile located at (`x`, `y`) and going down, set `n` amount of
+ *        tiles to the value of `tile`.
+ */
+extern void TIL_fillPlaneColumn(TilePlane plane, uint32_t x, uint32_t y, uint16_t tile, uint32_t n);
+/**
+ * @brief In the specified tile plane, starting from the tile located at (`x`, `y`) and going right, set `n` amount of
+ *        tiles to the value of `tile`.
+ */
+extern void TIL_fillPlaneRow(TilePlane plane, uint32_t x, uint32_t y, uint16_t tile, uint32_t n);
+/**
+ * @brief In the specified tile plane, fill a rectangle denoted by (`x`, `y`, `width`,
+ *        `height`), going left-to-right and top-to-bottom, to the value of `tile`.
+ */
+extern void TIL_fillPlaneRect(TilePlane plane, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint16_t tile);
