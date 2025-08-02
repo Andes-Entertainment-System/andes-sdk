@@ -1,11 +1,9 @@
-set (CMAKE_CXX_FLAGS "-O2")
-
+target_compile_definitions(app.bin PUBLIC __ANDES_WASM__)
+set (CMAKE_CXX_FLAGS "-Og")
 set (CMAKE_EXE_LINKER_FLAGS
-  "-nostdlib -Wl,--max-memory=3145728 -z stack-size=524288   \
-   -Wl,--no-entry -Wl,--strip-all \
+  "-Wl,--max-memory=7340032 -z stack-size=524288   \
    -Wl,--export=I_setup                \
    -Wl,--export=I_process                \
-   -Wl,--export=__heap_base -Wl,--export=__data_end -Wl,--export=malloc -Wl,--export=free \
    -Wl,--allow-undefined   \
    -fno-exceptions"
 )
