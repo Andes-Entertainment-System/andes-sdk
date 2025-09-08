@@ -5,6 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 
 pub mod audio;
@@ -90,10 +91,9 @@ fn write_data_length(
 pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
     let resources_path = project_path.join("resources");
 
-    let res_config: ResConfig =
-        serde_yml::from_reader(File::open(resources_path.join("config.yml"))?)?;
-
-    let _ = fs::create_dir(project_path.join("build"));
+    let res_config_file = File::open(resources_path.join("resources.yml"))
+        .context("Failed to load resources config file.")?;
+    let res_config: ResConfig = serde_yml::from_reader(res_config_file)?;
 
     let data_file = fs::File::create(project_path.join("build/resources.bin"))?;
 

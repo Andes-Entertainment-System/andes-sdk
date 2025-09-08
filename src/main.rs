@@ -10,6 +10,8 @@ use std::{
     time::Instant,
 };
 use thiserror::Error;
+
+pub mod metadata;
 pub mod resources;
 pub mod utils;
 
@@ -138,6 +140,13 @@ fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
 }
 
 fn build(project_path: &Path) -> anyhow::Result<()> {
+    // remove (if exists) and (re)create build folder
+    let build_path = project_path.join("build");
+    if fs::exists(&build_path)? {
+        fs::remove_dir_all(&build_path)?;
+    }
+    let _ = fs::create_dir(build_path);
+
     resources::compile_all(project_path)?;
 
     let build_residual_dir = &project_path.join(".build-residual");
