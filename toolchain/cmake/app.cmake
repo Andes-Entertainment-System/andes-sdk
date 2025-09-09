@@ -8,7 +8,7 @@ include_directories (${CMAKE_CURRENT_LIST_DIR}/../api/include)
 
 include_directories (resources)
 
-add_executable (app.bin ${API_SOURCES} ${PROJECT_SOURCES} resources/andes_resources.c)
+add_executable (executable.bin ${API_SOURCES} ${PROJECT_SOURCES} resources/andes_resources.c)
 
 if (${TARGET} STREQUAL "Wasm")
   include(${CMAKE_CURRENT_LIST_DIR}/target-wasm.cmake)

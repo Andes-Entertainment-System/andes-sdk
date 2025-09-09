@@ -10,32 +10,43 @@ pub enum UtilsError {
     InvalidColourFormat(PathBuf),
 }
 
-pub struct Image {
+pub struct IndexedImage {
     pub buffer: Vec<u8>,
+    pub palette: Vec<u8>,
     pub width: usize,
     pub height: usize,
 }
 
-pub fn load_indexed_image(source: &PathBuf) -> anyhow::Result<Image> {
-    let decoder = match source.extension() {
-        Some(os_str) => match os_str.to_str() {
-            Some("png") => Ok(png::Decoder::new(File::open(source)?)),
-            _ => Err(UtilsError::InvalidFileExtension(source.clone())),
-        },
-        None => Err(UtilsError::InvalidFileExtension(source.clone())),
-    }?;
+fn load_indexed_png(source: &PathBuf) -> anyhow::Result<IndexedImage> {
+    let decoder = png::Decoder::new(File::open(source)?);
 
-    let mut reader = decoder.read_info()?;
-    let mut buf = vec![0; reader.output_buffer_size()];
-    let info = reader.next_frame(&mut buf)?;
+    let reader = decoder.read_info()?;
+    let info = reader.info();
+    let buf = vec![0; reader.output_buffer_size()];
 
     if info.color_type != png::ColorType::Indexed {
         return Err(UtilsError::InvalidColourFormat(source.clone()).into());
     }
 
-    Ok(Image {
+    let palette = match &info.palette {
+        Some(x) => Ok(x.to_vec()),
+        None => Err(UtilsError::InvalidColourFormat(source.clone())),
+    }?;
+
+    Ok(IndexedImage {
         buffer: buf,
+        palette: palette,
         width: info.width as usize,
         height: info.height as usize,
     })
+}
+
+pub fn load_indexed_image(source: &PathBuf) -> anyhow::Result<IndexedImage> {
+    match source.extension() {
+        Some(os_str) => match os_str.to_str() {
+            Some("png") => load_indexed_png(source),
+            _ => Err(UtilsError::InvalidFileExtension(source.clone()).into()),
+        },
+        None => Err(UtilsError::InvalidFileExtension(source.clone()).into()),
+    }
 }

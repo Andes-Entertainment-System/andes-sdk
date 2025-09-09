@@ -42,7 +42,7 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- tilesets ----\n")?;
 
     for item in res_config.tilesets.iter() {
-        let utils::Image {
+        let utils::IndexedImage {
             buffer,
             width,
             height,

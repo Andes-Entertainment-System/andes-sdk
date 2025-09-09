@@ -1,9 +1,10 @@
 use anyhow::Context;
 use clap::{arg, Command};
+use serde::{Deserialize, Serialize};
 use std::{
     env,
     fs::{self, File},
-    io,
+    io::{self, BufWriter},
     path::{Path, PathBuf},
     process,
     str::FromStr,
@@ -15,13 +16,20 @@ pub mod metadata;
 pub mod resources;
 pub mod utils;
 
-#[derive(Clone, Copy, strum_macros::Display, strum_macros::EnumString)]
+#[derive(Serialize, Deserialize, Clone, Copy, strum_macros::Display, strum_macros::EnumString)]
 pub enum BuildTarget {
+    #[strum(ascii_case_insensitive)]
     Invalid,
     #[strum(ascii_case_insensitive)]
     Wasm,
     #[strum(ascii_case_insensitive)]
     Xtensa,
+}
+
+impl Default for BuildTarget {
+    fn default() -> Self {
+        BuildTarget::Invalid
+    }
 }
 
 #[derive(Error, Debug)]
@@ -45,6 +53,12 @@ Otherwise, you may look at the Installation page in the ESP-IDF docs for further
     CMakeConfigFailed,
     #[error("App make failed")]
     MakeFailed,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct BuildInfo {
+    #[serde(default)]
+    target: BuildTarget,
 }
 
 fn timed_task<F: Fn() -> anyhow::Result<()>>(task: F, name: &str) {
@@ -120,11 +134,11 @@ fn clean(project_path: &Path) -> anyhow::Result<()> {
 fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
     clean(project_path)?;
 
-    let build_residual_dir = &project_path.join(".build-residual");
-    fs::create_dir(build_residual_dir)?;
+    let build_residual_path = &project_path.join(".build-residual");
+    fs::create_dir(build_residual_path)?;
 
     let cmd = process::Command::new("cmake")
-        .current_dir(build_residual_dir)
+        .current_dir(build_residual_path)
         .arg("..")
         .arg(format!("-DTARGET={}", target))
         .args(get_target_args(target)?)
@@ -135,6 +149,12 @@ fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
     if !cmd.wait_with_output()?.status.success() {
         return Err(BuildError::CMakeConfigFailed.into());
     }
+
+    // save build info
+    let build_info: BuildInfo = BuildInfo { target };
+    let build_info_file = File::create(build_residual_path.join("build_info.yml"))?;
+
+    serde_yml::to_writer(BufWriter::new(build_info_file), &build_info)?;
 
     Ok(())
 }
@@ -147,16 +167,28 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
     }
     let _ = fs::create_dir(build_path);
 
-    resources::compile_all(project_path)?;
-
-    let build_residual_dir = &project_path.join(".build-residual");
-    if !fs::exists(build_residual_dir)? {
+    // if .build-residual does not exist, then no target has yet been set
+    let build_residual_path = &project_path.join(".build-residual");
+    if !fs::exists(build_residual_path)? {
         return Err(BuildError::NoTargetSet.into());
     }
 
+    // gather build info
+    let build_info_file = File::open(build_residual_path.join("build_info.yml"))
+        .context("Failed to load build info. Re-setting target should fix this issue.")?;
+    let build_info: BuildInfo = serde_yml::from_reader(build_info_file)?;
+
+    println!("Building {} target...", build_info.target);
+
+    // compile intermediates
+    metadata::compile(project_path)?;
+    resources::compile(project_path)?;
+
+    println!("Compiling executable...");
+
     // set up cmake
     let cmd = process::Command::new("cmake")
-        .current_dir(build_residual_dir)
+        .current_dir(build_residual_path)
         .arg("..")
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
@@ -168,7 +200,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
 
     // build app
     let cmd = process::Command::new("make")
-        .current_dir(build_residual_dir)
+        .current_dir(build_residual_path)
         .stdout(process::Stdio::inherit())
         .stderr(process::Stdio::inherit())
         .spawn()?;
@@ -177,22 +209,22 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         return Err(BuildError::MakeFailed.into());
     }
 
-    // copy app file to build folder
-    fs::copy(
-        build_residual_dir.join("app.bin"),
-        project_path.join("build/app.bin"),
-    )
-    .context("Failed to copy app binary file to build folder")?;
-
-    // merge resources.bin and app.bin into out.bin
-    let mut out_file = File::create(project_path.join("build/out.bin"))?;
+    // merge intermediate files into final binary
+    let mut out_file = File::create(project_path.join(format!(
+        "build/target_{}.bin",
+        build_info.target.to_string().to_lowercase()
+    )))?;
 
     io::copy(
-        &mut File::open(project_path.join("build/resources.bin"))?,
+        &mut File::open(build_residual_path.join("metadata.bin"))?,
         &mut out_file,
     )?;
     io::copy(
-        &mut File::open(project_path.join("build/app.bin"))?,
+        &mut File::open(build_residual_path.join("resources.bin"))?,
+        &mut out_file,
+    )?;
+    io::copy(
+        &mut File::open(build_residual_path.join("executable.bin"))?,
         &mut out_file,
     )?;
 

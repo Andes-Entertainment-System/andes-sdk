@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    fs::{self, File},
+    fs::File,
     io::{BufWriter, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
@@ -16,7 +16,7 @@ pub mod tilemap;
 pub mod tileset;
 
 #[derive(Serialize, Deserialize)]
-pub struct ResConfig {
+pub struct ResourceConfig {
     #[serde(default)]
     audio: Vec<audio::AudioDef>,
     #[serde(default)]
@@ -33,7 +33,7 @@ pub struct ResConfig {
 
 pub struct ResCompilerArgs {
     resources_path: PathBuf,
-    res_config: ResConfig,
+    res_config: ResourceConfig,
     data_buffer: BufWriter<File>,
     header_buffer: BufWriter<File>,
     source_buffer: BufWriter<File>,
@@ -88,17 +88,19 @@ fn write_data_length(
     Ok(())
 }
 
-pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
+pub fn compile(project_path: &Path) -> anyhow::Result<()> {
+    println!("Compiling resources...");
+
     let resources_path = project_path.join("resources");
 
     let res_config_file = File::open(resources_path.join("resources.yml"))
         .context("Failed to load resources config file.")?;
-    let res_config: ResConfig = serde_yml::from_reader(res_config_file)?;
+    let res_config: ResourceConfig = serde_yml::from_reader(res_config_file)?;
 
-    let data_file = fs::File::create(project_path.join("build/resources.bin"))?;
+    let data_file = File::create(project_path.join(".build-residual/resources.bin"))?;
 
-    let header_file = fs::File::create(resources_path.join("andes_resources.h"))?;
-    let source_file = fs::File::create(resources_path.join("andes_resources.c"))?;
+    let header_file = File::create(resources_path.join("andes_resources.h"))?;
+    let source_file = File::create(resources_path.join("andes_resources.c"))?;
 
     let mut compiler_args = ResCompilerArgs {
         resources_path,

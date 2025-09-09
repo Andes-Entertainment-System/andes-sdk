@@ -1,7 +1,6 @@
 use std::{
-    collections::HashMap,
-    fs::{self, File},
-    io::{BufWriter, Seek, SeekFrom, Write},
+    fs::File,
+    io::{BufWriter, Write},
     path::{Path, PathBuf},
 };
 
@@ -27,12 +26,14 @@ pub enum MetadataError {
     BigThumbnailMisSize,
 }
 
-pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
+pub fn compile(project_path: &Path) -> anyhow::Result<()> {
+    println!("Compiling metadata...");
+
     let meta_config_file = File::open(project_path.join("metadata.yml"))
         .context("Failed to load metadata config file.")?;
     let meta_config: MetadataConfig = serde_yml::from_reader(meta_config_file)?;
 
-    let metadata_file = fs::File::create(project_path.join("build/metadata.bin"))?;
+    let metadata_file = File::create(project_path.join(".build-residual/metadata.bin"))?;
     let mut meta_buffer = BufWriter::new(metadata_file);
 
     meta_buffer.write_all(meta_config.id.as_bytes())?;
@@ -52,7 +53,9 @@ pub fn compile_all(project_path: &Path) -> anyhow::Result<()> {
         return Err(MetadataError::BigThumbnailMisSize.into());
     }
 
+    meta_buffer.write_all(&small_thumbnail_image.palette)?;
     meta_buffer.write_all(&small_thumbnail_image.buffer)?;
+    meta_buffer.write_all(&big_thumbnail_image.palette)?;
     meta_buffer.write_all(&big_thumbnail_image.buffer)?;
 
     Ok(())

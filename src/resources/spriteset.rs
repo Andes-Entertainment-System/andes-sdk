@@ -106,7 +106,7 @@ pub fn compile(
     source_buffer.write_all(b"\n// ---- spritesets ----\n")?;
 
     for item in res_config.spritesets.iter() {
-        let utils::Image {
+        let utils::IndexedImage {
             buffer: bytes,
             width,
             height,
