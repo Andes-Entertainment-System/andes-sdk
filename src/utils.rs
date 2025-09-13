@@ -1,4 +1,8 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+    path::PathBuf,
+};
 
 use thiserror::Error;
 
@@ -20,9 +24,10 @@ pub struct IndexedImage {
 fn load_indexed_png(source: &PathBuf) -> anyhow::Result<IndexedImage> {
     let decoder = png::Decoder::new(File::open(source)?);
 
-    let reader = decoder.read_info()?;
+    let mut reader = decoder.read_info()?;
+    let mut buf = vec![0; reader.output_buffer_size()];
+    let _ = reader.next_frame(&mut buf);
     let info = reader.info();
-    let buf = vec![0; reader.output_buffer_size()];
 
     if info.color_type != png::ColorType::Indexed {
         return Err(UtilsError::InvalidColourFormat(source.clone()).into());
@@ -49,4 +54,10 @@ pub fn load_indexed_image(source: &PathBuf) -> anyhow::Result<IndexedImage> {
         },
         None => Err(UtilsError::InvalidFileExtension(source.clone()).into()),
     }
+}
+
+pub fn write_measured(writer: &mut BufWriter<File>, data: &[u8]) -> anyhow::Result<()> {
+    writer.write_all(&(data.len() as u32).to_le_bytes())?;
+    writer.write_all(data)?;
+    Ok(())
 }

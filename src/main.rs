@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     env,
     fs::{self, File},
-    io::{self, BufWriter},
+    io::{self, BufWriter, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     process,
     str::FromStr,
@@ -15,6 +15,8 @@ use thiserror::Error;
 pub mod metadata;
 pub mod resources;
 pub mod utils;
+
+const PACKAGE_VERSION: i32 = 0;
 
 #[derive(Serialize, Deserialize, Clone, Copy, strum_macros::Display, strum_macros::EnumString)]
 pub enum BuildTarget {
@@ -159,6 +161,23 @@ fn set_target(project_path: &Path, target: BuildTarget) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn write_preamble(build_buffer: &mut BufWriter<File>) -> anyhow::Result<()> {
+    build_buffer.write_all(b"ANDES")?;
+    build_buffer.write_all(&PACKAGE_VERSION.to_le_bytes())?;
+    build_buffer.seek(SeekFrom::Current(4))?; // u32 executable address
+
+    Ok(())
+}
+
+fn finish_preamble(build_buffer: &mut BufWriter<File>) -> anyhow::Result<()> {
+    let executable_address = build_buffer.seek(SeekFrom::Current(0))? as u32;
+    build_buffer.seek(SeekFrom::Start(9))?; // after "ANDES" and u32 package version, 5+4 bytes
+    build_buffer.write_all(&executable_address.to_le_bytes())?;
+    build_buffer.seek(SeekFrom::End(0))?;
+
+    Ok(())
+}
+
 fn build(project_path: &Path) -> anyhow::Result<()> {
     // remove (if exists) and (re)create build folder
     let build_path = project_path.join("build");
@@ -180,9 +199,18 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
 
     println!("Building {} target...", build_info.target);
 
-    // compile intermediates
-    metadata::compile(project_path)?;
-    resources::compile(project_path)?;
+    // set up build file buffer
+    let build_file = File::create(project_path.join(format!(
+        "build/target_{}.bin",
+        build_info.target.to_string().to_lowercase()
+    )))?;
+    let mut build_buffer = BufWriter::new(build_file);
+
+    // compile non-exec parts
+    write_preamble(&mut build_buffer)?;
+    metadata::compile(project_path, &mut build_buffer)?;
+    resources::compile(project_path, &mut build_buffer)?;
+    finish_preamble(&mut build_buffer)?;
 
     println!("Compiling executable...");
 
@@ -198,7 +226,7 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         return Err(BuildError::CMakeConfigFailed.into());
     }
 
-    // build app
+    // build executable
     let cmd = process::Command::new("make")
         .current_dir(build_residual_path)
         .stdout(process::Stdio::inherit())
@@ -209,23 +237,10 @@ fn build(project_path: &Path) -> anyhow::Result<()> {
         return Err(BuildError::MakeFailed.into());
     }
 
-    // merge intermediate files into final binary
-    let mut out_file = File::create(project_path.join(format!(
-        "build/target_{}.bin",
-        build_info.target.to_string().to_lowercase()
-    )))?;
-
-    io::copy(
-        &mut File::open(build_residual_path.join("metadata.bin"))?,
-        &mut out_file,
-    )?;
-    io::copy(
-        &mut File::open(build_residual_path.join("resources.bin"))?,
-        &mut out_file,
-    )?;
+    // merge app into build file
     io::copy(
         &mut File::open(build_residual_path.join("executable.bin"))?,
-        &mut out_file,
+        &mut build_buffer,
     )?;
 
     Ok(())

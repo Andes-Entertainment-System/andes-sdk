@@ -45,8 +45,8 @@ pub enum TileMapError {
 pub fn compile(
     ResCompilerArgs {
         resources_path,
+        build_buffer,
         ref mut header_buffer,
-        ref mut data_buffer,
         ref mut source_buffer,
         res_config,
         resolved,
@@ -158,13 +158,13 @@ pub fn compile(
         }
 
         // write layout into data buffer
-        let layout_address = data_buffer.seek(SeekFrom::Current(0))?;
+        let layout_address = build_buffer.seek(SeekFrom::Current(0))?;
 
         for descriptor in layout {
-            data_buffer.write_all(&descriptor.to_le_bytes())?;
+            build_buffer.write_all(&descriptor.to_le_bytes())?;
         }
 
-        let layout_size = data_buffer.seek(SeekFrom::Current(0))? - layout_address;
+        let layout_size = build_buffer.seek(SeekFrom::Current(0))? - layout_address;
 
         // convert tileset arrangement into chunk arrangement
         let ResolvedTileSet {
@@ -180,7 +180,7 @@ pub fn compile(
         let chunk_width = (tilemap.tile_width / 8) as usize;
         let chunk_height = (tilemap.tile_height / 8) as usize;
 
-        let chunk_arr_address = data_buffer.seek(SeekFrom::Current(0))?;
+        let chunk_arr_address = build_buffer.seek(SeekFrom::Current(0))?;
 
         for ty in (0..*tileset_height).step_by(chunk_height) {
             for tx in (0..*tileset_width).step_by(chunk_width) {
@@ -188,13 +188,13 @@ pub fn compile(
                     for x in 0..chunk_width {
                         let tile_index = tileset_arrangement[tx + x + (ty + y) * tileset_width]
                             + item.tileset_offset;
-                        data_buffer.write_all(&tile_index.to_le_bytes())?;
+                        build_buffer.write_all(&tile_index.to_le_bytes())?;
                     }
                 }
             }
         }
 
-        let chunk_arr_size = data_buffer.seek(SeekFrom::Current(0))? - chunk_arr_address;
+        let chunk_arr_size = build_buffer.seek(SeekFrom::Current(0))? - chunk_arr_address;
 
         header_buffer.write_fmt(format_args!("extern TileMapResource RES_{};\n", item.id))?;
         source_buffer.write_fmt(format_args!(

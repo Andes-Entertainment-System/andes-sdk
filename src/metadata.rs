@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufWriter, Write},
+    io::BufWriter,
     path::{Path, PathBuf},
 };
 
-use crate::utils;
+use crate::utils::{self, write_measured};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -26,19 +26,16 @@ pub enum MetadataError {
     BigThumbnailMisSize,
 }
 
-pub fn compile(project_path: &Path) -> anyhow::Result<()> {
+pub fn compile(project_path: &Path, build_buffer: &mut BufWriter<File>) -> anyhow::Result<()> {
     println!("Compiling metadata...");
 
     let meta_config_file = File::open(project_path.join("metadata.yml"))
         .context("Failed to load metadata config file.")?;
     let meta_config: MetadataConfig = serde_yml::from_reader(meta_config_file)?;
 
-    let metadata_file = File::create(project_path.join(".build-residual/metadata.bin"))?;
-    let mut meta_buffer = BufWriter::new(metadata_file);
-
-    meta_buffer.write_all(meta_config.id.as_bytes())?;
-    meta_buffer.write_all(meta_config.title.as_bytes())?;
-    meta_buffer.write_all(meta_config.author.as_bytes())?;
+    write_measured(build_buffer, meta_config.id.as_bytes())?;
+    write_measured(build_buffer, meta_config.title.as_bytes())?;
+    write_measured(build_buffer, meta_config.author.as_bytes())?;
 
     let small_thumbnail_image =
         utils::load_indexed_image(&project_path.join(meta_config.small_thumbnail_path))?;
@@ -53,10 +50,10 @@ pub fn compile(project_path: &Path) -> anyhow::Result<()> {
         return Err(MetadataError::BigThumbnailMisSize.into());
     }
 
-    meta_buffer.write_all(&small_thumbnail_image.palette)?;
-    meta_buffer.write_all(&small_thumbnail_image.buffer)?;
-    meta_buffer.write_all(&big_thumbnail_image.palette)?;
-    meta_buffer.write_all(&big_thumbnail_image.buffer)?;
+    write_measured(build_buffer, &small_thumbnail_image.palette)?;
+    write_measured(build_buffer, &small_thumbnail_image.buffer)?;
+    write_measured(build_buffer, &big_thumbnail_image.palette)?;
+    write_measured(build_buffer, &big_thumbnail_image.buffer)?;
 
     Ok(())
 }

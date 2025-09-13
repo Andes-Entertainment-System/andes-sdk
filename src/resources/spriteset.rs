@@ -95,8 +95,8 @@ fn convert_sprite(bytes: &[u8], region: Rect, image_width: usize) -> Vec<u8> {
 pub fn compile(
     ResCompilerArgs {
         resources_path,
+        build_buffer,
         ref mut header_buffer,
-        ref mut data_buffer,
         ref mut source_buffer,
         res_config,
         ..
@@ -113,7 +113,7 @@ pub fn compile(
             ..
         } = utils::load_indexed_image(&resources_path.join(&item.path))?;
 
-        let data_address = data_buffer.seek(SeekFrom::Current(0))?;
+        let data_address = build_buffer.seek(SeekFrom::Current(0))?;
 
         header_buffer.write_fmt(format_args!(
             "extern const SpriteSetFrame FRAMES_{}[];\n",
@@ -136,7 +136,7 @@ pub fn compile(
                     width, height
                 ))?;
 
-                data_buffer.write_all(&convert_sprite(
+                build_buffer.write_all(&convert_sprite(
                     &bytes,
                     Rect {
                         x: 0,
@@ -155,12 +155,12 @@ pub fn compile(
                     for x in (0..width).step_by(sprite_width) {
                         source_buffer.write_fmt(format_args!(
                             "  {{ .offset = {}, .width = {}, .height = {} }},\n",
-                            data_buffer.seek(SeekFrom::Current(0))? - data_address,
+                            build_buffer.seek(SeekFrom::Current(0))? - data_address,
                             sprite_width,
                             sprite_height
                         ))?;
 
-                        data_buffer.write_all(&convert_sprite(
+                        build_buffer.write_all(&convert_sprite(
                             &bytes,
                             Rect {
                                 x,
@@ -177,12 +177,12 @@ pub fn compile(
                 for region in settings.split.manual_frames.iter() {
                     source_buffer.write_fmt(format_args!(
                         "  {{ .offset = {}, .width = {}, .height = {} }},\n",
-                        data_buffer.seek(SeekFrom::Current(0))? - data_address,
+                        build_buffer.seek(SeekFrom::Current(0))? - data_address,
                         region.width,
                         region.height
                     ))?;
 
-                    data_buffer.write_all(&convert_sprite(&bytes, region.clone(), width))?;
+                    build_buffer.write_all(&convert_sprite(&bytes, region.clone(), width))?;
                 }
             }
         }
@@ -192,7 +192,7 @@ pub fn compile(
             "}};\nSpriteSetResource RES_{} = {{ .address = {}, .size = {}, ",
             item.id,
             data_address,
-            data_buffer.seek(SeekFrom::Current(0))? - data_address,
+            build_buffer.seek(SeekFrom::Current(0))? - data_address,
         ))?;
         source_buffer.write_fmt(format_args!(".frames = FRAMES_{} }};\n\n", item.id,))?;
     }

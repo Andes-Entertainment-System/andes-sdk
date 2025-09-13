@@ -30,8 +30,8 @@ pub struct ResolvedTileSet {
 pub fn compile(
     ResCompilerArgs {
         resources_path,
+        build_buffer,
         ref mut header_buffer,
-        ref mut data_buffer,
         ref mut source_buffer,
         res_config,
         resolved,
@@ -53,7 +53,7 @@ pub fn compile(
         let mut tile_hashes: Vec<md5::Digest> = Vec::new();
         let mut tile_arrangement: Vec<u16> = Vec::new();
 
-        let data_address = data_buffer.seek(SeekFrom::Current(0))?;
+        let data_address = build_buffer.seek(SeekFrom::Current(0))?;
 
         for ty in (0..height as usize).step_by(8) {
             for tx in (0..width as usize).step_by(8) {
@@ -75,7 +75,7 @@ pub fn compile(
                 let tile_hash = md5::compute(tile);
 
                 if !tile_hashes.contains(&tile_hash) || item.keep_duplicates {
-                    data_buffer.write_all(&tile)?;
+                    build_buffer.write_all(&tile)?;
                     tile_hashes.push(tile_hash);
                     tile_amount += 1;
 
