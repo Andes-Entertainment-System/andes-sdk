@@ -6,20 +6,24 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "author": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "title": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "big_thumbnail_path": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "small_thumbnail_path": {
-      "type": "string"
-    },
-    "required": ["mode"]
+      "type": "string",
+      "required": true
+    }
   }
 }
