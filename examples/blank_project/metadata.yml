@@ -1,0 +1,6 @@
+# App metadata goes here. Make sure to change these default values.
+id: andes.exampleblankproject
+author: Andes Entertaintment System
+title: Blank Project Example
+big_thumbnail_path: thumbnails/thumbnail_big.png
+small_thumbnail_path: thumbnails/thumbnail_small.png

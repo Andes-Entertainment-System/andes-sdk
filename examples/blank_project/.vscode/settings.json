@@ -1,6 +1,7 @@
 {
   "yaml.schemas": {
-    "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/resource_config.schema.json": "resources/config.yml",
+    "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/metadata_config.schema.json": "metadata.yml",
+    "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/resource_config.schema.json": "resources/resources.yml",
     "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/spriteset_settings.schema.json": "resources/sprite{s, sets}/**/*.yml",
   },
 }

@@ -1,0 +1,25 @@
+{
+  "$id": "https://andes-entertainment-system.github.io/andes-sdk/toolchain/yaml/metadata_config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
+  "title": "Andes SDK: Metadata Config",
+  "description": "Schema for the Andes SDK metadata configuration file.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "big_thumbnail_path": {
+      "type": "string"
+    },
+    "small_thumbnail_path": {
+      "type": "string"
+    },
+    "required": ["mode"]
+  }
+}
