@@ -11,18 +11,12 @@ struct InputDevice {
   uint8_t address;
   struct {
     uint32_t buttons;
-    uint8_t leftStickX;
-    uint8_t leftStickY;
-    uint8_t rightStickX;
-    uint8_t rightStickY;
-    uint8_t leftTrigger;
-    uint8_t rightTrigger;
-    uint16_t gyroX;
-    uint16_t gyroY;
-    uint16_t gyroZ;
-    uint16_t accelX;
-    uint16_t accelY;
-    uint16_t accelZ;
+    int16_t leftStickX;
+    int16_t leftStickY;
+    int16_t rightStickX;
+    int16_t rightStickY;
+    int16_t leftTrigger;
+    int16_t rightTrigger;
   } state;
 };
 typedef struct InputDevice InputDevice;
@@ -60,9 +54,9 @@ enum GamePadTrigger {
 typedef enum GamePadTrigger GamePadTrigger;
 
 bool JOY_getButtonPressed(uint32_t pad, GamePadButton button);
-uint8_t JOY_getTrigger(uint32_t pad, GamePadTrigger trigger);
-uint8_t JOY_getStickX(uint32_t pad, GamePadStick stick);
-uint8_t JOY_getStickY(uint32_t pad, GamePadStick stick);
+int16_t JOY_getTrigger(uint32_t pad, GamePadTrigger trigger);
+int16_t JOY_getStickX(uint32_t pad, GamePadStick stick);
+int16_t JOY_getStickY(uint32_t pad, GamePadStick stick);
 
 void I_JOY_transferInputs();
 
