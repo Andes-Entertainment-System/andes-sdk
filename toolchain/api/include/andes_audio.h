@@ -27,10 +27,19 @@ extern void SFX_pauseMusic();
 extern void SFX_seekMusic(uint64_t position);
 
 /**
- * TODO NOT IMPLEMENTED
- * @brief Fade out the current music track within `duration` samples, and then pause it.
+ * @brief Set the music channel's volume (0 to 1).
  */
-extern void SFX_fadeOutMusic(uint64_t duration);
+extern void SFX_setMusicVolume(float volume);
+
+/**
+ * @brief Set the music channel's panning (-1 to 1, 0 being middle)
+ */
+extern void SFX_setMusicPanning(float panning);
+
+/**
+ * @brief Get the music track's current playback position in samples.
+ */
+extern uint64_t SFX_getMusicPosition();
 
 /**
  * @brief Set the start position in samples for the looping part of the track that's currently playing. Setting
@@ -43,13 +52,11 @@ void SFX_loadSound(AudioResource* res);
 void SFX_unloadSound(AudioResource* res);
 
 /**
- * TODO NOT IMPLEMENTED
  * @brief Set the specified SFX channel's volume (0 to 1).
  */
 extern void SFX_setChannelVolume(uint8_t channel, float volume);
 
 /**
- * TODO NOT IMPLEMENTED
  * @brief Set the specified SFX channel's panning (-1 to 1, 0 being middle)
  */
 extern void SFX_setChannelPanning(uint8_t channel, float panning);
