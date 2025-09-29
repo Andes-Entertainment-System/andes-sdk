@@ -34,7 +34,7 @@ fn load_indexed_png(source: &PathBuf) -> anyhow::Result<IndexedImage> {
     }
 
     let palette = match &info.palette {
-        Some(x) => Ok(x.to_vec()),
+        Some(x) => Ok(x.to_vec().iter().map(|x| x >> 2).collect()),
         None => Err(UtilsError::InvalidColourFormat(source.clone())),
     }?;
 
