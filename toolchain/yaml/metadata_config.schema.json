@@ -5,25 +5,17 @@
   "description": "Schema for the Andes SDK metadata configuration file.",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "required": true
-    },
-    "author": {
-      "type": "string",
-      "required": true
-    },
-    "title": {
-      "type": "string",
-      "required": true
-    },
-    "big_thumbnail_path": {
-      "type": "string",
-      "required": true
-    },
-    "small_thumbnail_path": {
-      "type": "string",
-      "required": true
-    }
-  }
+    "id": { "type": "string" },
+    "author": { "type": "string" },
+    "title": { "type": "string" },
+    "big_thumbnail_path": { "type": "string" },
+    "small_thumbnail_path": { "type": "string" }
+  },
+  "required": [
+    "id",
+    "author",
+    "title",
+    "big_thumbnail_path",
+    "small_thumbnail_path"
+  ]
 }
