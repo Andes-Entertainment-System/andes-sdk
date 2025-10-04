@@ -45,6 +45,11 @@ void TIL_loadTileSetAt(TileSetResource* res, uint32_t offset);
  */
 void TIL_setPlaneHScrollTable(TilePlane plane, uint32_t row, uint32_t* offsets, uint32_t n);
 /**
+ * @brief In the specified tile plane, starting from the row of tiles located at `row` and going down, set `n` amount of
+ *        values from the plane's horizontal scroll offset table to `offset`.
+ */
+extern void TIL_fillPlaneHScrollTable(TilePlane plane, uint32_t row, uint32_t offset, uint32_t n);
+/**
  * @brief Set `x` (horizontal) and `y` (vertical) base scroll values for the specified tile plane.
  */
 extern void TIL_setPlaneScrollXY(TilePlane plane, uint32_t x, uint32_t y);
