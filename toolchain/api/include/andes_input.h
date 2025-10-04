@@ -54,6 +54,8 @@ enum GamePadTrigger {
 typedef enum GamePadTrigger GamePadTrigger;
 
 bool JOY_getButtonPressed(uint32_t pad, GamePadButton button);
+bool JOY_getButtonJustPressed(uint32_t pad, GamePadButton button);
+bool JOY_getButtonJustReleased(uint32_t pad, GamePadButton button);
 int16_t JOY_getTrigger(uint32_t pad, GamePadTrigger trigger);
 int16_t JOY_getStickX(uint32_t pad, GamePadStick stick);
 int16_t JOY_getStickY(uint32_t pad, GamePadStick stick);
