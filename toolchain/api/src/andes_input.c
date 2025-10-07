@@ -11,11 +11,11 @@ bool JOY_getButtonPressed(uint32_t pad, enum GamePadButton button) {
 }
 
 bool JOY_getButtonJustPressed(uint32_t pad, enum GamePadButton button) {
-  return (gamePads[pad].state.buttons >> button) & 1 > (lastButtons[pad] >> button) & 1;
+  return ((gamePads[pad].state.buttons >> button) & 1) > ((lastButtons[pad] >> button) & 1);
 }
 
 bool JOY_getButtonJustReleased(uint32_t pad, enum GamePadButton button) {
-  return (gamePads[pad].state.buttons >> button) & 1 < (lastButtons[pad] >> button) & 1;
+  return ((gamePads[pad].state.buttons >> button) & 1) < ((lastButtons[pad] >> button) & 1);
 }
 
 int16_t JOY_getTrigger(uint32_t pad, enum GamePadTrigger trigger) {
