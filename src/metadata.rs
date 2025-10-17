@@ -20,9 +20,9 @@ pub struct MetadataConfig {
 
 #[derive(Error, Debug)]
 pub enum MetadataError {
-    #[error("The small thumbnail specified for this project is not the correct size. Small thumbnails should be 40x32.")]
+    #[error("The small thumbnail specified for this project is not the correct size. Small thumbnails should be 48x36.")]
     SmallThumbnailMisSize,
-    #[error("The big thumbnail specified for this project is not the correct size. Big thumbnails should be 256x192.")]
+    #[error("The big thumbnail specified for this project is not the correct size. Big thumbnails should be 160x120.")]
     BigThumbnailMisSize,
 }
 
@@ -42,11 +42,11 @@ pub fn compile(project_path: &Path, build_buffer: &mut BufWriter<File>) -> anyho
     let big_thumbnail_image =
         utils::load_indexed_image(&project_path.join(meta_config.big_thumbnail_path))?;
 
-    if small_thumbnail_image.width != 40 || small_thumbnail_image.height != 32 {
+    if small_thumbnail_image.width != 48 || small_thumbnail_image.height != 36 {
         return Err(MetadataError::SmallThumbnailMisSize.into());
     }
 
-    if big_thumbnail_image.width != 256 || big_thumbnail_image.height != 192 {
+    if big_thumbnail_image.width != 160 || big_thumbnail_image.height != 120 {
         return Err(MetadataError::BigThumbnailMisSize.into());
     }
 
