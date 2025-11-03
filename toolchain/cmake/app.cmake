@@ -1,3 +1,5 @@
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
+
 if (NOT DEFINED PROJECT_SOURCES)
   message (FATAL_ERROR "PROJECT_SOURCES is not defined! Project source files must be specified in the \
 PROJECT_SOURCES variable.")
