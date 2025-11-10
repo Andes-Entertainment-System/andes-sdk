@@ -63,7 +63,8 @@
           "path": { "type": "string" },
           "keep_duplicates": { "type": "boolean" },
           "export_plane_arrangement": { "type": "boolean" },
-          "plane_arrangement_offset": { "type": "number" }
+          "plane_arrangement_offset": { "type": "number" },
+          "plane_arrangement_priority": { "type": "boolean" }
         },
         "required": [ "id", "path" ]
       }

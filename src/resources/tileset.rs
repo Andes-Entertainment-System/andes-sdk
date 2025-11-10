@@ -19,12 +19,18 @@ pub struct TileSetDef {
     export_plane_arrangement: bool,
     #[serde(default)]
     plane_arrangement_offset: usize,
+    #[serde(default)]
+    plane_arrangement_priority: bool,
 }
 
 pub struct ResolvedTileSet {
     pub arrangement: Vec<u16>,
     pub width: usize,
     pub height: usize,
+}
+
+fn format_tile_descriptor(id: usize, item: &TileSetDef) -> u16 {
+    (id + item.plane_arrangement_offset) as u16 | (item.plane_arrangement_priority as u16) << 15
 }
 
 pub fn compile(
@@ -79,16 +85,16 @@ pub fn compile(
                     tile_hashes.push(tile_hash);
                     tile_amount += 1;
 
-                    tile_arrangement
-                        .push((tile_hashes.len() - 1 + item.plane_arrangement_offset) as u16);
+                    let tile_id = tile_hashes.len() - 1;
+
+                    tile_arrangement.push(format_tile_descriptor(tile_id, item));
                 } else {
-                    tile_arrangement.push(
-                        (tile_hashes
-                            .iter()
-                            .position(|x| *x == tile_hash)
-                            .unwrap_or(0)
-                            + item.plane_arrangement_offset) as u16,
-                    );
+                    let tile_id = tile_hashes
+                        .iter()
+                        .position(|x| *x == tile_hash)
+                        .unwrap_or(0);
+
+                    tile_arrangement.push(format_tile_descriptor(tile_id, item));
                 }
             }
         }
