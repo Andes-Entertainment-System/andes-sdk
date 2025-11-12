@@ -3,8 +3,8 @@
 
 #include "string.h"
 
-static struct InputDevice gamePads[JOY_MAX_GAMEPADS];
-static uint32_t lastButtons[JOY_MAX_GAMEPADS];
+struct InputDevice gamePads[JOY_MAX_GAMEPADS];
+uint32_t lastButtons[JOY_MAX_GAMEPADS];
 
 bool JOY_getButtonPressed(uint32_t pad, enum GamePadButton button) {
   return (gamePads[pad].state.buttons >> button) & 1;

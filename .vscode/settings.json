@@ -2,6 +2,7 @@
   "C_Cpp.default.compilerPath": "${ANDES_SDK_DIR},bin/clang",
   "files.associations": {
     "andes_tiles.h": "c",
-    "cstdint": "cpp"
+    "cstdint": "cpp",
+    "andes_events.h": "c"
   }
 }

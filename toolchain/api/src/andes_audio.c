@@ -7,7 +7,11 @@ void SFX_playMusic(struct AudioResource* res) {
 }
 
 void SFX_playSound(int8_t channel, struct AudioResource* res) {
-  I_SFX_playSoundFromBuffer(channel, res->data, res->dataSize);
+  SFX_playSoundFromBuffer(channel, res->data, res->dataSize);
+}
+
+void SFX_queueSound(int8_t channel, struct AudioResource* res) {
+  SFX_queueSoundFromBuffer(channel, res->data, res->dataSize);
 }
 
 void SFX_loadSound(struct AudioResource* res) {

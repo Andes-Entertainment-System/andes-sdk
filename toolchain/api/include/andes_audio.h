@@ -42,6 +42,11 @@ extern void SFX_setMusicPanning(float panning);
 extern uint64_t SFX_getMusicPosition();
 
 /**
+ * @brief Returns `true` if music is currently playing.
+ */
+extern bool SFX_musicPlaying();
+
+/**
  * @brief Set the start position in samples for the looping part of the track that's currently playing. Setting
  * loopStart to -1 or any other negative number will disable looping. Be aware that loopStart is also set automatically
  * by SFX_playMusic, using the loop start specified for the track in the resource config file.
@@ -62,6 +67,11 @@ extern void SFX_setChannelVolume(uint8_t channel, float volume);
 extern void SFX_setChannelPanning(uint8_t channel, float panning);
 
 /**
+ * @brief Returns `true` if sound is currently playing at the given SFX channel.
+ */
+extern bool SFX_soundPlaying(uint8_t channel);
+
+/**
  * @brief Play a sound on the specified SFX channel. If -1 (or any other out-of-range number) is given as the channel
  *        ID, the sound will play on the channel with the smallest ID that isn't currently playing a sound already
  *        (or 0 if all channels are playing sounds).
@@ -69,9 +79,11 @@ extern void SFX_setChannelPanning(uint8_t channel, float panning);
 void SFX_playSound(int8_t channel, AudioResource* res);
 
 /**
- * @brief Play Opus audio data located at `srcAddr` in the app file, with a size of `n` bytes.
+ * @brief Queue a sound on the specified SFX channel, to be played after the current sound. Only one buffer can be
+ *        queued at a time, so if this function is called more than once before the current sound finishes playing,
+ *        the queue is overwritten.
  */
-extern void I_SFX_playMusicFromDisk(uint32_t srcAddr, uint32_t n);
+void SFX_queueSound(int8_t channel, AudioResource* res);
 
 /**
  * @brief Play a sound from a buffer `src` with a size of `n` bytes containing raw audio data, on the specified SFX
@@ -79,7 +91,24 @@ extern void I_SFX_playMusicFromDisk(uint32_t srcAddr, uint32_t n);
  *        channel with the smallest ID that isn't currently playing a sound already (or 0 if all channels are playing
  *        sounds).
  */
-extern void I_SFX_playSoundFromBuffer(int8_t channel, void* src, uint32_t n);
+extern void SFX_playSoundFromBuffer(int8_t channel, void* src, uint32_t n);
+
+/**
+ * @brief Queue a sound from a buffer `src` with a size of `n` bytes containing raw audio data, on the specified SFX
+ *        channel, to be played after the current sound. Only one buffer can be queued at a time, so if this function
+ *        is called more than once before the current sound finishes playing, the queue is overwritten.
+ */
+extern void SFX_queueSoundFromBuffer(int8_t channel, void* src, uint32_t n);
+
+/**
+ * @brief Returns `true` if there is a sound queued at the given SFX channel.
+ */
+extern bool SFX_soundQueued(uint8_t channel);
+
+/**
+ * @brief Play Opus audio data located at `srcAddr` in the app file, with a size of `n` bytes.
+ */
+extern void I_SFX_playMusicFromDisk(uint32_t srcAddr, uint32_t n);
 
 /**
  * @brief Load and decode Opus audio data located at `srcAddr` in the app file, with a size of `n` bytes. The size of
