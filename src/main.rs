@@ -92,14 +92,14 @@ fn get_target_args(target: BuildTarget) -> anyhow::Result<Vec<String>> {
             println!(
                 "-DCMAKE_TOOLCHAIN_FILE={}",
                 wasi_sdk_path
-                    .join("share/cmake/wasi-sdk.cmake")
+                    .join("share/cmake/wasi-sdk-pthread.cmake")
                     .to_string_lossy()
             );
             Ok(vec![
                 format!(
                     "-DCMAKE_TOOLCHAIN_FILE={}",
                     wasi_sdk_path
-                        .join("share/cmake/wasi-sdk.cmake")
+                        .join("share/cmake/wasi-sdk-pthread.cmake")
                         .to_string_lossy()
                 ),
                 format!(
