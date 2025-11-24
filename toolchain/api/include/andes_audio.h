@@ -67,6 +67,11 @@ extern void SFX_setChannelVolume(uint8_t channel, float volume);
 extern void SFX_setChannelPanning(uint8_t channel, float panning);
 
 /**
+ * @brief Enable or disable queuing for the specified SFX channel.
+ */
+extern void SFX_setChannelQueueEnabled(uint8_t channel, bool enable);
+
+/**
  * @brief Returns `true` if sound is currently playing at the given SFX channel.
  */
 extern bool SFX_soundPlaying(uint8_t channel);

@@ -6,8 +6,8 @@ set (CMAKE_EXE_LINKER_FLAGS
    -Wl,--export=I_setup                \
    -Wl,--export=I_process                \
    -Wl,--export=EVENT_SFX_onQueueEmpty                \
+   -Wl,--export=__data_end -Wl,--export=__heap_base \
+   -Wl,--export=malloc -Wl,--export=free \
    -Wl,--allow-undefined   \
-   -pthread  \
-   -Wl,--shared-memory \
    -fno-exceptions"
 )
